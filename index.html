@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="referrer" content="no-referrer" />
 <title>Remix Radar</title>
 <meta name="theme-color" content="#0B1014" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -14,14 +15,14 @@
   :root{
     --bg:#0B1014; --bg2:#121A16; --card:#161d1a; --card2:#1b2420;
     --accent:#2FD967; --accent-soft:#7BF7A8; --text:#EAF2EC; --muted:#8B9A90;
-    --line:#243029; --orange:#FF9F40; --red:#FF5C5C;
+    --line:#243029; --orange:#FF9F40; --red:#FF5C5C; --heart:#FF4D6D;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0;}
   body{
     background:linear-gradient(160deg,var(--bg),var(--bg2));
     color:var(--text); font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    min-height:100vh; padding-bottom:env(safe-area-inset-bottom);
+    min-height:100vh; padding-bottom:calc(env(safe-area-inset-bottom) + 72px);
   }
   a{color:inherit;}
   .wrap{max-width:680px; margin:0 auto; padding:0 14px;}
@@ -35,6 +36,7 @@
   .hrow{display:flex; align-items:center; gap:10px;}
   .logo{display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px;}
   .logo img{width:30px; height:30px; border-radius:7px;}
+  .htitle{font-weight:800; font-size:21px;}
   .spacer{flex:1;}
   .iconbtn{
     width:40px; height:40px; border:1px solid var(--line); background:var(--card);
@@ -43,8 +45,10 @@
   }
   .iconbtn.active{border-color:var(--accent); color:var(--accent);}
   .sub{color:var(--muted); font-size:12.5px; margin-top:6px;}
+  .backbtn{display:inline-flex; align-items:center; gap:6px; background:none; border:none;
+    color:var(--accent); font-size:15px; cursor:pointer; padding:0;}
 
-  /* Filter panel */
+  /* Filters */
   .filters{display:none; margin-top:12px; background:var(--card); border:1px solid var(--line);
     border-radius:16px; padding:14px;}
   .filters.open{display:block;}
@@ -59,8 +63,8 @@
   .filters .foot{display:flex; justify-content:space-between; margin-top:10px;}
   .linkbtn{background:none; border:none; color:var(--accent); font-size:14px; cursor:pointer; padding:6px;}
 
-  /* List */
-  .list{padding:14px 0 40px; display:flex; flex-direction:column; gap:12px;}
+  /* List + cards */
+  .list{padding:14px 0 20px; display:flex; flex-direction:column; gap:12px;}
   .card{display:flex; gap:12px; background:var(--card); border:1px solid var(--line);
     border-radius:16px; padding:12px; cursor:pointer;}
   .cover{position:relative; width:64px; height:64px; border-radius:10px; flex:none;
@@ -72,11 +76,11 @@
   .rank{font-size:11px; font-weight:800; color:var(--muted);}
   .badge{font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px;}
   .badge.new{background:var(--orange); color:#3a2000;}
-  .badge.up{color:var(--accent);}
-  .badge.down{color:var(--red);}
-  .badge.eq{color:var(--muted);}
-  .growth{margin-left:auto; font-size:12.5px; font-weight:800; color:#06231a;
-    background:var(--accent); padding:3px 9px; border-radius:999px;}
+  .badge.up{color:var(--accent);} .badge.down{color:var(--red);} .badge.eq{color:var(--muted);}
+  .heart{margin-left:auto; font-size:18px; line-height:1; cursor:pointer; color:var(--muted); padding:0 2px;}
+  .heart.on{color:var(--heart);}
+  .growth{font-size:12.5px; font-weight:800; color:#06231a; background:var(--accent);
+    padding:3px 9px; border-radius:999px;}
   .name{font-weight:700; font-size:15.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .artist{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .meta{display:flex; gap:12px; margin-top:5px; font-size:11.5px; color:var(--muted); flex-wrap:wrap;}
@@ -84,11 +88,31 @@
   .gchips{display:flex; gap:6px; margin-top:7px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
   .gchip{font-size:10.5px; padding:3px 8px; border-radius:999px; background:var(--card2);
     border:1px solid var(--line); white-space:nowrap; color:var(--muted);}
+  .rmbtn{margin-left:auto; background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer;}
 
   .status{padding:60px 20px; text-align:center; color:var(--muted);}
-  .status button{margin-top:14px;}
   .primary{background:var(--accent); color:#06231a; border:none; font-weight:800;
     padding:11px 18px; border-radius:12px; font-size:15px; cursor:pointer;}
+  .sechead{display:flex; align-items:center; margin:20px 0 4px; font-size:13px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.05em; font-weight:700;}
+  .sechead .cnt{color:var(--accent); margin-left:6px;}
+
+  /* Playlist rows */
+  .plrow{display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line);
+    border-radius:14px; padding:14px; cursor:pointer; margin-bottom:10px;}
+  .plicon{width:46px; height:46px; border-radius:10px; background:linear-gradient(135deg,#1d2a22,#16201a);
+    display:flex; align-items:center; justify-content:center; font-size:20px; flex:none;}
+  .plname{font-weight:700;} .plcount{color:var(--muted); font-size:12.5px;}
+  .chev{margin-left:auto; color:var(--muted); font-size:20px;}
+
+  /* Bottom tab bar */
+  .tabbar{position:fixed; left:0; right:0; bottom:0; z-index:40;
+    background:rgba(11,16,20,.92); backdrop-filter:blur(14px); border-top:1px solid var(--line);
+    display:flex; padding:8px 0 calc(env(safe-area-inset-bottom) + 8px);}
+  .tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer;}
+  .tab .ic{font-size:21px;}
+  .tab.on{color:var(--accent);}
 
   /* Detail sheet */
   .sheet{position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.5);
@@ -108,8 +132,7 @@
   .dgrowth .lab{color:var(--muted); font-size:12.5px; margin-top:6px;}
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;}
   .mcard{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px;}
-  .mcard .k{font-size:11px; color:var(--muted);}
-  .mcard .v{font-size:18px; font-weight:700; margin-top:4px;}
+  .mcard .k{font-size:11px; color:var(--muted);} .mcard .v{font-size:18px; font-weight:700; margin-top:4px;}
   .mcard .v small{color:var(--accent); font-size:12px; font-weight:700;}
   .drows{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px 12px; margin-bottom:16px;}
   .drow{display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px;}
@@ -120,19 +143,16 @@
     border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; border:1px solid var(--line);
     background:var(--card); color:var(--text); text-decoration:none;}
   .btn.fill{background:var(--accent); color:#06231a; border-color:var(--accent);}
+  .btn.heartbtn.on{border-color:var(--heart); color:var(--heart);}
+  .plpick{margin:4px 0 16px;}
+  .plpick h4{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin:0 0 8px;}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <div class="hrow">
-      <div class="logo"><img src="./pwa-icon-192.png" alt=""/> Remix Radar</div>
-      <div class="spacer"></div>
-      <button class="iconbtn" id="refreshBtn" title="Aggiorna">⟳</button>
-      <button class="iconbtn" id="filterBtn" title="Filtri">⚙︎</button>
-    </div>
-    <div class="sub" id="sub">Carico…</div>
-
+    <div class="hrow" id="headerRow"></div>
+    <div class="sub" id="sub"></div>
     <div class="filters" id="filters">
       <h4>Crescita 24h minima</h4>
       <div class="rangerow">
@@ -155,135 +175,224 @@
   </div>
 </header>
 
-<main class="wrap">
-  <div id="content"><div class="status">Carico trending…</div></div>
-</main>
+<main class="wrap"><div id="content"><div class="status">Carico trending…</div></div></main>
 
-<div class="sheet" id="sheet">
-  <div class="sheetinner" id="sheetinner"></div>
-</div>
+<nav class="tabbar">
+  <button class="tab" id="tabRadar"><span class="ic">📡</span>Radar</button>
+  <button class="tab" id="tabLib"><span class="ic">❤️</span>Libreria</button>
+</nav>
 
+<div class="sheet" id="sheet"><div class="sheetinner" id="sheetinner"></div></div>
 <audio id="audio"></audio>
 
 <script>
 const FEED_URL = "./feed.json";
-const state = { feed:null, filter:{ minGrowth:0, genres:new Set(), platforms:new Set(), fresh:false }, playingId:null };
+const LS = { likes:"rr_likes_v1", playlists:"rr_playlists_v1", feed:"rr_feed" };
+const state = {
+  feed:null, view:"radar", currentPlaylist:null,
+  filter:{ minGrowth:0, genres:new Set(), platforms:new Set(), fresh:false },
+  playingId:null,
+  likes:loadJSON(LS.likes, {}),       // { id: trackSnapshot }
+  playlists:loadJSON(LS.playlists, []) // [ {id,name,createdAt,tracks:[snap]} ]
+};
 const audio = document.getElementById('audio');
 
-const fmt = n => {
-  if(n==null || n<=0) return "—";
-  if(n>=1e6) return (n/1e6).toFixed(1)+"M";
-  if(n>=1e3) return (n/1e3).toFixed(1)+"K";
-  return ""+Math.round(n);
-};
+function loadJSON(k, def){ try{ return JSON.parse(localStorage.getItem(k)) ?? def; }catch(e){ return def; } }
+function saveLikes(){ localStorage.setItem(LS.likes, JSON.stringify(state.likes)); }
+function savePlaylists(){ localStorage.setItem(LS.playlists, JSON.stringify(state.playlists)); }
+
+const fmt = n => { if(n==null||n<=0) return "—"; if(n>=1e6) return (n/1e6).toFixed(1)+"M"; if(n>=1e3) return (n/1e3).toFixed(1)+"K"; return ""+Math.round(n); };
 const esc = s => (s==null?"":(""+s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-// Feed items have no `id` field (in the SwiftUI model it's computed); derive the
-// same stable id here: spotify_id, else "name|artist".
 const idOf = t => t.spotify_id || (t.name+"|"+t.artist);
+const newId = () => "pl_"+Math.random().toString(36).slice(2,9)+(""+(state.playlists.length));
 
-function platformActive(p, t){
-  switch(p){
-    case "spotify": return (t.streams_24h||0)>0;
-    case "tiktok":  return (t.tiktok_24h_videos||0)>0;
-    case "youtube": return (t.youtube_24h_pct||0)>0;
-    case "shazam":  return (t.shazam_total||0)>0;
-  }
+/* ---- track lookup across feed + saved data (saved tracks may have left the chart) ---- */
+function trackById(id){
+  if(state.feed){ const f=state.feed.items.find(x=>idOf(x)===id); if(f) return f; }
+  if(state.likes[id]) return state.likes[id];
+  for(const p of state.playlists){ const t=p.tracks.find(x=>idOf(x)===id); if(t) return t; }
+  return null;
 }
+
+/* ---- likes ---- */
+const isLiked = id => !!state.likes[id];
+function toggleLike(t){
+  const id = idOf(t);
+  if(state.likes[id]) delete state.likes[id];
+  else state.likes[id] = t;          // store full snapshot
+  saveLikes(); rerender();
+}
+
+/* ---- playlists ---- */
+function createPlaylist(name, firstTrack){
+  const p = { id:newId(), name:name||"Nuova playlist", createdAt:new Date().toISOString(), tracks:[] };
+  if(firstTrack) p.tracks.push(firstTrack);
+  state.playlists.unshift(p); savePlaylists(); return p;
+}
+function renamePlaylist(id){
+  const p = state.playlists.find(x=>x.id===id); if(!p) return;
+  const name = prompt("Nome playlist:", p.name);
+  if(name && name.trim()){ p.name = name.trim(); savePlaylists(); rerender(); }
+}
+function deletePlaylist(id){
+  const p = state.playlists.find(x=>x.id===id); if(!p) return;
+  if(!confirm('Eliminare la playlist "'+p.name+'"?')) return;
+  state.playlists = state.playlists.filter(x=>x.id!==id); savePlaylists();
+  if(state.view==="playlist") goView("library"); else rerender();
+}
+const inPlaylist = (pl,id) => pl.tracks.some(t=>idOf(t)===id);
+function togglePlaylistTrack(plId, t){
+  const p = state.playlists.find(x=>x.id===plId); if(!p) return;
+  const id = idOf(t);
+  if(inPlaylist(p,id)) p.tracks = p.tracks.filter(x=>idOf(x)!==id);
+  else p.tracks.push(t);             // store full snapshot
+  savePlaylists();
+}
+
+/* ---- filtering (radar only) ---- */
 const PLATFORMS = [["spotify","Spotify"],["tiktok","TikTok"],["youtube","YouTube"],["shazam","Shazam"]];
-
-function parseDate(s){
-  if(!s) return null;
-  const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/.exec(s);
-  if(!m) return null;
-  return new Date(Date.UTC(+m[1], (m[2]?+m[2]-1:0), (m[3]?+m[3]:1)));
-}
-
+function platformActive(p,t){ switch(p){
+  case "spotify": return (t.streams_24h||0)>0; case "tiktok": return (t.tiktok_24h_videos||0)>0;
+  case "youtube": return (t.youtube_24h_pct||0)>0; case "shazam": return (t.shazam_total||0)>0; } }
+function parseDate(s){ if(!s) return null; const m=/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/.exec(s); return m?new Date(Date.UTC(+m[1],(m[2]?+m[2]-1:0),(m[3]?+m[3]:1))):null; }
 function matches(t){
-  const f = state.filter;
-  if(f.minGrowth>0 && (t.growth_24h_pct||0) < f.minGrowth) return false;
+  const f=state.filter;
+  if(f.minGrowth>0 && (t.growth_24h_pct||0)<f.minGrowth) return false;
   if(f.platforms.size && ![...f.platforms].some(p=>platformActive(p,t))) return false;
-  if(f.genres.size){
-    const g = (t.genres||[]).map(x=>x.toLowerCase());
-    if(![...f.genres].some(sel=>g.some(x=>x.includes(sel.toLowerCase())))) return false;
-  }
-  if(f.fresh){
-    const d = parseDate(t.release_date);
-    if(!d) return false;
-    const days = (Date.now()-d.getTime())/86400000;
-    if(days>30) return false;
-  }
+  if(f.genres.size){ const g=(t.genres||[]).map(x=>x.toLowerCase());
+    if(![...f.genres].some(sel=>g.some(x=>x.includes(sel.toLowerCase())))) return false; }
+  if(f.fresh){ const d=parseDate(t.release_date); if(!d) return false;
+    if((Date.now()-d.getTime())/86400000>30) return false; }
   return true;
 }
 
 function deltaBadge(d){
   if(!d) return "";
   if(d==="NEW") return '<span class="badge new">NEW</span>';
-  if(d[0]==="↑"||d[0]==="+"||/^↑/.test(d)) return '<span class="badge up">'+esc(d)+'</span>';
+  if(/^↑/.test(d)) return '<span class="badge up">'+esc(d)+'</span>';
   if(/^↓/.test(d)) return '<span class="badge down">'+esc(d)+'</span>';
   if(d==="=") return '<span class="badge eq">=</span>';
-  return '<span class="badge eq">'+esc(d)+'</span>';
+  return "";
 }
 
-function render(){
-  const c = document.getElementById('content');
-  if(!state.feed){ return; }
-  const items = state.feed.items.filter(matches);
-  if(!items.length){
-    c.innerHTML = '<div class="status">Nessun brano corrisponde ai filtri.<br><button class="primary" id="rs2">Reset filtri</button></div>';
-    document.getElementById('rs2').onclick = resetFilters;
-    return;
-  }
-  c.innerHTML = '<div class="list">'+items.map(cardHTML).join('')+'</div>';
-  [...c.querySelectorAll('.card')].forEach(el=>{
-    el.addEventListener('click', e=>{
-      if(e.target.closest('.play')) return;
-      openDetail(el.dataset.id);
-    });
-  });
-  [...c.querySelectorAll('.play')].forEach(el=>{
-    el.addEventListener('click', e=>{ e.stopPropagation(); togglePlay(el.dataset.id); });
-  });
-}
-
-function cardHTML(t){
+/* ---- card ---- */
+function cardHTML(t, opt){
+  opt = opt||{};
   const id = idOf(t);
   const cover = t.cover_url ? `style="background-image:url('${esc(t.cover_url)}')"` : "";
   const playing = state.playingId===id;
-  const play = t.preview_url ? `<div class="play" data-id="${esc(id)}">${playing?"❚❚":"▶"}</div>` : "";
+  const play = t.preview_url ? `<div class="play" data-play="${esc(id)}">${playing?"❚❚":"▶"}</div>` : "";
   const tk = (t.tiktok_24h_videos||0)>0 ? `<span>🎬 <b>${t.tiktok_24h_videos}</b> TikTok</span>` : "";
   const gchips = (t.genres||[]).slice(0,3).map(g=>`<span class="gchip">${esc(g)}</span>`).join('');
-  return `<div class="card" data-id="${esc(id)}">
+  const rankDelta = opt.hideRank ? "" : `<span class="rank">#${t.rank||""}</span>${deltaBadge(t.delta)}`;
+  const right = opt.removeFrom
+    ? `<button class="rmbtn" data-rm="${esc(id)}" title="Rimuovi">🗑</button>`
+    : `<span class="heart ${isLiked(id)?'on':''}" data-like="${esc(id)}">${isLiked(id)?'♥':'♡'}</span>`;
+  const growth = (t.growth_24h_pct!=null) ? `<span class="growth">+${(t.growth_24h_pct||0).toFixed(0)}% 24h</span>` : "";
+  return `<div class="card" data-open="${esc(id)}">
     <div class="cover" ${cover}>${play}</div>
     <div class="cbody">
-      <div class="toprow">
-        <span class="rank">#${t.rank}</span>${deltaBadge(t.delta)}
-        <span class="growth">+${(t.growth_24h_pct||0).toFixed(0)}% 24h</span>
-      </div>
+      <div class="toprow">${rankDelta}${right}${growth}</div>
       <div class="name">${esc(t.name)}</div>
       <div class="artist">${esc(t.artist)}</div>
       <div class="meta"><span>🎵 <b>${fmt(t.streams_24h)}</b> 24h</span>${tk}</div>
       ${gchips?`<div class="gchips">${gchips}</div>`:""}
-    </div>
-  </div>`;
+    </div></div>`;
 }
 
+function bindCards(scope, opt){
+  opt = opt||{};
+  scope.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',e=>{
+    if(e.target.closest('[data-play]')||e.target.closest('[data-like]')||e.target.closest('[data-rm]')) return;
+    openDetail(el.dataset.open);
+  }));
+  scope.querySelectorAll('[data-play]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();togglePlay(el.dataset.play);}));
+  scope.querySelectorAll('[data-like]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();const t=trackById(el.dataset.like);if(t)toggleLike(t);}));
+  scope.querySelectorAll('[data-rm]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const id=el.dataset.rm;
+    if(opt.removeFrom==="likes"){ delete state.likes[id]; saveLikes(); rerender(); }
+    else if(opt.removeFrom){ const p=state.playlists.find(x=>x.id===opt.removeFrom);
+      if(p){ p.tracks=p.tracks.filter(x=>idOf(x)!==id); savePlaylists(); rerender(); } }
+  }));
+}
+
+/* ---- views ---- */
+function rerender(){ render(); if(document.getElementById('sheet').classList.contains('open') && state.openId) openDetail(state.openId); }
+
+function render(){
+  syncHeader(); syncTabs();
+  const c = document.getElementById('content');
+  if(state.view==="radar") return renderRadar(c);
+  if(state.view==="library") return renderLibrary(c);
+  if(state.view==="playlist") return renderPlaylist(c);
+}
+
+function renderRadar(c){
+  if(!state.feed){ c.innerHTML='<div class="status">Carico trending…</div>'; return; }
+  const items = state.feed.items.filter(matches);
+  if(!items.length){ c.innerHTML='<div class="status">Nessun brano corrisponde ai filtri.<br><button class="primary" id="rs2">Reset filtri</button></div>';
+    document.getElementById('rs2').onclick=resetFilters; return; }
+  c.innerHTML = '<div class="list">'+items.map(t=>cardHTML(t)).join('')+'</div>';
+  bindCards(c);
+}
+
+function renderLibrary(c){
+  const liked = Object.values(state.likes);
+  let html = '';
+  html += `<div class="sechead">Mi piace <span class="cnt">${liked.length}</span></div>`;
+  if(liked.length) html += '<div class="list">'+liked.map(t=>cardHTML(t,{hideRank:true})).join('')+'</div>';
+  else html += '<div class="status" style="padding:24px 0;">Nessun brano salvato. Tocca ♡ su un brano per salvarlo.</div>';
+
+  html += `<div class="sechead">Playlist <span class="cnt">${state.playlists.length}</span>
+    <button class="linkbtn" id="newPl" style="margin-left:auto;">+ Nuova</button></div>`;
+  if(state.playlists.length){
+    html += state.playlists.map(p=>`<div class="plrow" data-pl="${p.id}">
+        <div class="plicon">🎚</div>
+        <div><div class="plname">${esc(p.name)}</div><div class="plcount">${p.tracks.length} bran${p.tracks.length===1?'o':'i'}</div></div>
+        <span class="chev">›</span></div>`).join('');
+  } else {
+    html += '<div class="status" style="padding:24px 0;">Nessuna playlist. Creane una per organizzare i brani da remixare.</div>';
+  }
+  c.innerHTML = html;
+  bindCards(c, {removeFrom:"likes"});
+  document.getElementById('newPl').onclick = ()=>{
+    const name = prompt("Nome della nuova playlist:", "Da remixare");
+    if(name && name.trim()){ createPlaylist(name.trim()); rerender(); }
+  };
+  c.querySelectorAll('[data-pl]').forEach(el=>el.onclick=()=>{ state.currentPlaylist=el.dataset.pl; goView("playlist"); });
+}
+
+function renderPlaylist(c){
+  const p = state.playlists.find(x=>x.id===state.currentPlaylist);
+  if(!p){ goView("library"); return; }
+  let html = '';
+  if(!p.tracks.length) html += '<div class="status" style="padding:30px 0;">Playlist vuota.<br>Apri un brano e tocca “Aggiungi a playlist”.</div>';
+  else html += '<div class="list">'+p.tracks.map(t=>cardHTML(t,{hideRank:true,removeFrom:p.id})).join('')+'</div>';
+  c.innerHTML = html;
+  bindCards(c, {removeFrom:p.id});
+}
+
+/* ---- detail sheet ---- */
 function openDetail(id){
-  const t = state.feed.items.find(x=>idOf(x)===id);
-  if(!t) return;
+  const t = trackById(id); if(!t) return;
+  state.openId = id;
+  const liked = isLiked(id);
   const cover = t.cover_url ? `style="background-image:url('${esc(t.cover_url)}')"` : "";
   const playing = state.playingId===id;
-  const rows = [];
-  if(t.release_date) rows.push(["Uscita", esc(t.release_date)]);
-  if(t.label) rows.push(["Label", esc(t.label)]);
-  if((t.genres||[]).length) rows.push(["Generi", t.genres.map(esc).join(" · ")]);
-  const tkDetail = (t.tiktok_24h_pct||0)>0 ? ` <small>+${t.tiktok_24h_pct.toFixed(0)}%</small>` : "";
-  const yt = "https://www.youtube.com/results?search_query="+encodeURIComponent(t.name+" "+t.artist);
+  const rows=[];
+  if(t.release_date) rows.push(["Uscita",esc(t.release_date)]);
+  if(t.label) rows.push(["Label",esc(t.label)]);
+  if((t.genres||[]).length) rows.push(["Generi",t.genres.map(esc).join(" · ")]);
+  const tkDetail=(t.tiktok_24h_pct||0)>0?` <small>+${t.tiktok_24h_pct.toFixed(0)}%</small>`:"";
+  const yt="https://www.youtube.com/results?search_query="+encodeURIComponent(t.name+" "+t.artist);
+  const plChips = state.playlists.map(p=>`<span class="chip ${inPlaylist(p,id)?'on':''}" data-tpl="${p.id}">${inPlaylist(p,id)?'✓ ':''}${esc(p.name)}</span>`).join('');
   document.getElementById('sheetinner').innerHTML = `
     <div class="grab"></div>
     <div class="dcover" ${cover}></div>
     <div class="dtitle">${esc(t.name)}</div>
     <div class="dartist">${esc(t.artist)}</div>
-    <div class="dgrowth"><div class="big">+${(t.growth_24h_pct||0).toFixed(1)}%</div>
+    <div class="dgrowth"><div class="big">${t.growth_24h_pct!=null?"+"+t.growth_24h_pct.toFixed(1)+"%":"—"}</div>
       <div class="lab">Crescita streams Spotify nelle ultime 24h</div></div>
     <div class="grid">
       <div class="mcard"><div class="k">Streams 24h</div><div class="v">${fmt(t.streams_24h)}</div></div>
@@ -292,100 +401,114 @@ function openDetail(id){
       <div class="mcard"><div class="k">Popolarità Spotify</div><div class="v">${t.spotify_popularity!=null?t.spotify_popularity+"/100":"—"}</div></div>
     </div>
     ${rows.length?`<div class="drows">${rows.map(r=>`<div class="drow"><span class="k">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div>`:""}
+    <div class="plpick">
+      <h4>Aggiungi a playlist</h4>
+      <div class="chips">${plChips}<span class="chip" id="newPlChip">+ Nuova playlist</span></div>
+    </div>
     <div class="actions">
+      <button class="btn heartbtn ${liked?'on':''}" id="dLike">${liked?'♥ Salvato nei preferiti':'♡ Salva nei preferiti'}</button>
       ${t.preview_url?`<button class="btn fill" id="dPlay">${playing?"❚❚ Stop preview":"▶ Ascolta preview 30s"}</button>`:""}
       ${t.spotify_url?`<a class="btn" href="${esc(t.spotify_url)}" target="_blank" rel="noopener">↗ Apri su Spotify</a>`:""}
       <a class="btn" href="${yt}" target="_blank" rel="noopener">▶ Cerca su YouTube</a>
     </div>`;
-  const dp = document.getElementById('dPlay');
-  if(dp) dp.onclick = ()=>{ togglePlay(t.id); openDetail(id); };
+  const dLike=document.getElementById('dLike'); dLike.onclick=()=>{ toggleLike(t); };
+  const dPlay=document.getElementById('dPlay'); if(dPlay) dPlay.onclick=()=>{ togglePlay(id); openDetail(id); };
+  document.querySelectorAll('[data-tpl]').forEach(el=>el.onclick=()=>{ togglePlaylistTrack(el.dataset.tpl,t); openDetail(id); rerenderListOnly(); });
+  document.getElementById('newPlChip').onclick=()=>{
+    const name=prompt("Nome della nuova playlist:","Da remixare");
+    if(name&&name.trim()){ createPlaylist(name.trim(), t); openDetail(id); rerenderListOnly(); }
+  };
   document.getElementById('sheet').classList.add('open');
 }
+function rerenderListOnly(){ render(); }
+function closeSheet(){ document.getElementById('sheet').classList.remove('open'); state.openId=null; }
+document.getElementById('sheet').addEventListener('click',e=>{ if(e.target.id==='sheet') closeSheet(); });
 
-function closeSheet(){ document.getElementById('sheet').classList.remove('open'); }
-document.getElementById('sheet').addEventListener('click', e=>{ if(e.target.id==='sheet') closeSheet(); });
-
+/* ---- audio ---- */
 function togglePlay(id){
-  const t = state.feed.items.find(x=>idOf(x)===id);
-  if(!t || !t.preview_url) return;
-  if(state.playingId===id){ audio.pause(); state.playingId=null; render(); return; }
-  audio.src = t.preview_url; audio.play().catch(()=>{});
-  state.playingId = id; render();
+  const t=trackById(id); if(!t||!t.preview_url) return;
+  if(state.playingId===id){ audio.pause(); state.playingId=null; rerender(); return; }
+  audio.src=t.preview_url; audio.play().catch(()=>{}); state.playingId=id; rerender();
 }
-audio.addEventListener('ended', ()=>{ state.playingId=null; render(); });
+audio.addEventListener('ended',()=>{ state.playingId=null; rerender(); });
 
-/* ---- Filters UI ---- */
-function buildFilterChips(){
-  document.getElementById('platChips').innerHTML =
-    PLATFORMS.map(([k,l])=>`<span class="chip" data-plat="${k}">${l}</span>`).join('');
-  const genres = [...new Set(state.feed.items.flatMap(t=>t.genres||[]))].sort();
-  document.getElementById('genreChips').innerHTML =
-    genres.map(g=>`<span class="chip" data-genre="${esc(g)}">${esc(g)}</span>`).join('') || '<span class="sub">Nessun genere</span>';
-  bindChips();
+/* ---- header / tabs ---- */
+function syncHeader(){
+  const h=document.getElementById('headerRow'), sub=document.getElementById('sub'), filtersEl=document.getElementById('filters');
+  if(state.view==="radar"){
+    h.innerHTML=`<div class="logo"><img src="./pwa-icon-192.png" alt=""/> Remix Radar</div>
+      <div class="spacer"></div>
+      <button class="iconbtn" id="refreshBtn" title="Aggiorna">⟳</button>
+      <button class="iconbtn ${filterActive()?'active':''}" id="filterBtn" title="Filtri">⚙︎</button>`;
+    sub.style.display="block";
+    sub.textContent = state.feed ? "Top trending · crescita 24h · aggiornato "+relTime(state.feed.generated_at) : "Carico…";
+    document.getElementById('refreshBtn').onclick=()=>load(true);
+    document.getElementById('filterBtn').onclick=()=>filtersEl.classList.toggle('open');
+  } else if(state.view==="library"){
+    h.innerHTML=`<div class="htitle">Libreria</div>`; sub.style.display="none"; filtersEl.classList.remove('open');
+  } else if(state.view==="playlist"){
+    const p=state.playlists.find(x=>x.id===state.currentPlaylist);
+    h.innerHTML=`<button class="backbtn" id="backBtn">‹ Libreria</button><div class="spacer"></div>
+      <button class="iconbtn" id="renBtn" title="Rinomina">✏️</button>
+      <button class="iconbtn" id="delBtn" title="Elimina">🗑</button>`;
+    sub.style.display="block"; sub.textContent = p?(esc(p.name)+" · "+p.tracks.length+" bran"+(p.tracks.length===1?'o':'i')):"";
+    filtersEl.classList.remove('open');
+    document.getElementById('backBtn').onclick=()=>goView("library");
+    document.getElementById('renBtn').onclick=()=>renamePlaylist(state.currentPlaylist);
+    document.getElementById('delBtn').onclick=()=>deletePlaylist(state.currentPlaylist);
+  }
 }
-function bindChips(){
-  document.querySelectorAll('[data-plat]').forEach(el=>el.onclick=()=>{
-    const k=el.dataset.plat; toggleSet(state.filter.platforms,k); el.classList.toggle('on'); render();
-  });
-  document.querySelectorAll('[data-genre]').forEach(el=>el.onclick=()=>{
-    const k=el.dataset.genre; toggleSet(state.filter.genres,k); el.classList.toggle('on'); render();
-  });
-  document.querySelectorAll('[data-fresh]').forEach(el=>el.onclick=()=>{
-    state.filter.fresh=!state.filter.fresh; el.classList.toggle('on'); render();
-  });
+function syncTabs(){
+  document.getElementById('tabRadar').classList.toggle('on', state.view==="radar");
+  document.getElementById('tabLib').classList.toggle('on', state.view==="library"||state.view==="playlist");
+}
+function goView(v){ state.view=v; closeSheet(); window.scrollTo(0,0); render(); }
+document.getElementById('tabRadar').onclick=()=>goView("radar");
+document.getElementById('tabLib').onclick=()=>goView("library");
+
+/* ---- filters wiring ---- */
+function filterActive(){ const f=state.filter; return f.minGrowth>0||f.genres.size||f.platforms.size||f.fresh; }
+function buildFilterChips(){
+  document.getElementById('platChips').innerHTML=PLATFORMS.map(([k,l])=>`<span class="chip" data-plat="${k}">${l}</span>`).join('');
+  const genres=[...new Set((state.feed?.items||[]).flatMap(t=>t.genres||[]))].sort();
+  document.getElementById('genreChips').innerHTML=genres.map(g=>`<span class="chip" data-genre="${esc(g)}">${esc(g)}</span>`).join('')||'<span class="sub">—</span>';
+  document.querySelectorAll('[data-plat]').forEach(el=>el.onclick=()=>{toggleSet(state.filter.platforms,el.dataset.plat);el.classList.toggle('on');syncHeader();renderRadar(document.getElementById('content'));});
+  document.querySelectorAll('[data-genre]').forEach(el=>el.onclick=()=>{toggleSet(state.filter.genres,el.dataset.genre);el.classList.toggle('on');syncHeader();renderRadar(document.getElementById('content'));});
+  document.querySelectorAll('[data-fresh]').forEach(el=>el.onclick=()=>{state.filter.fresh=!state.filter.fresh;el.classList.toggle('on');syncHeader();renderRadar(document.getElementById('content'));});
 }
 function toggleSet(s,k){ s.has(k)?s.delete(k):s.add(k); }
 function resetFilters(){
-  state.filter = { minGrowth:0, genres:new Set(), platforms:new Set(), fresh:false };
-  document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));
-  const r=document.getElementById('growthRange'); r.value=0; document.getElementById('growthVal').textContent="0%";
-  syncFilterBtn(); render();
+  state.filter={minGrowth:0,genres:new Set(),platforms:new Set(),fresh:false};
+  document.querySelectorAll('.filters .chip.on').forEach(c=>c.classList.remove('on'));
+  const r=document.getElementById('growthRange'); if(r){r.value=0;document.getElementById('growthVal').textContent="0%";}
+  syncHeader(); renderRadar(document.getElementById('content'));
 }
-function syncFilterBtn(){
-  const f=state.filter, active=f.minGrowth>0||f.genres.size||f.platforms.size||f.fresh;
-  document.getElementById('filterBtn').classList.toggle('active', !!active);
-}
-document.getElementById('growthRange').addEventListener('input', e=>{
-  state.filter.minGrowth=+e.target.value;
-  document.getElementById('growthVal').textContent=e.target.value+"%";
-  syncFilterBtn(); render();
-});
-document.getElementById('filterBtn').onclick=()=>document.getElementById('filters').classList.toggle('open');
+document.getElementById('growthRange').addEventListener('input',e=>{state.filter.minGrowth=+e.target.value;document.getElementById('growthVal').textContent=e.target.value+"%";syncHeader();renderRadar(document.getElementById('content'));});
 document.getElementById('closeFiltersBtn').onclick=()=>document.getElementById('filters').classList.remove('open');
 document.getElementById('resetBtn').onclick=resetFilters;
-document.getElementById('refreshBtn').onclick=()=>load(true);
 
-/* ---- Load ---- */
-function relTime(iso){
-  const d=new Date(iso), diff=(Date.now()-d.getTime())/1000;
+/* ---- load ---- */
+function relTime(iso){ const d=new Date(iso),diff=(Date.now()-d.getTime())/1000;
   if(diff<3600) return Math.max(1,Math.round(diff/60))+" min fa";
-  if(diff<86400) return Math.round(diff/3600)+"h fa";
-  return Math.round(diff/86400)+"g fa";
-}
+  if(diff<86400) return Math.round(diff/3600)+"h fa"; return Math.round(diff/86400)+"g fa"; }
 async function load(force){
   const sub=document.getElementById('sub');
   try{
-    if(force) sub.textContent="Aggiorno…";
-    const res = await fetch(FEED_URL+"?t="+Date.now(), {cache:"no-store"});
+    if(force&&sub) sub.textContent="Aggiorno…";
+    const res=await fetch(FEED_URL+"?t="+Date.now(),{cache:"no-store"});
     if(!res.ok) throw new Error("HTTP "+res.status);
-    const feed = await res.json();
-    state.feed = feed;
-    try{ localStorage.setItem("rr_feed", JSON.stringify(feed)); }catch(e){}
-    afterLoad();
+    state.feed=await res.json();
+    try{ localStorage.setItem(LS.feed, JSON.stringify(state.feed)); }catch(e){}
+    buildFilterChips(); render();
   }catch(err){
-    const cached = localStorage.getItem("rr_feed");
-    if(cached){ state.feed=JSON.parse(cached); afterLoad(); sub.textContent+=" · offline"; }
-    else { document.getElementById('content').innerHTML='<div class="status">Impossibile caricare il feed.<br>'+esc(err.message)+'<br><button class="primary" id="rt">Riprova</button></div>'; document.getElementById('rt').onclick=()=>load(true); }
+    const cached=loadJSON(LS.feed,null);
+    if(cached){ state.feed=cached; buildFilterChips(); render(); }
+    else if(state.view==="radar"){ document.getElementById('content').innerHTML='<div class="status">Impossibile caricare il feed.<br><button class="primary" id="rt">Riprova</button></div>'; document.getElementById('rt').onclick=()=>load(true); }
   }
-}
-function afterLoad(){
-  document.getElementById('sub').textContent =
-    "Top trending · crescita 24h · aggiornato "+relTime(state.feed.generated_at);
-  buildFilterChips();
-  render();
 }
 
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
+render();      // paint shell immediately (library works even before feed loads)
 load(false);
 </script>
 </body>
