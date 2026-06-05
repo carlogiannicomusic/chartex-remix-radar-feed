@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>Remix Radar</title>
+<meta name="theme-color" content="#0B1014" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Remix Radar" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+<style>
+  :root{
+    --bg:#0B1014; --bg2:#121A16; --card:#161d1a; --card2:#1b2420;
+    --accent:#2FD967; --accent-soft:#7BF7A8; --text:#EAF2EC; --muted:#8B9A90;
+    --line:#243029; --orange:#FF9F40; --red:#FF5C5C;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:linear-gradient(160deg,var(--bg),var(--bg2));
+    color:var(--text); font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh; padding-bottom:env(safe-area-inset-bottom);
+  }
+  a{color:inherit;}
+  .wrap{max-width:680px; margin:0 auto; padding:0 14px;}
+
+  header{
+    position:sticky; top:0; z-index:30;
+    background:rgba(11,16,20,.82); backdrop-filter:saturate(160%) blur(14px);
+    border-bottom:1px solid var(--line);
+    padding:calc(env(safe-area-inset-top) + 12px) 0 12px;
+  }
+  .hrow{display:flex; align-items:center; gap:10px;}
+  .logo{display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px;}
+  .logo img{width:30px; height:30px; border-radius:7px;}
+  .spacer{flex:1;}
+  .iconbtn{
+    width:40px; height:40px; border:1px solid var(--line); background:var(--card);
+    border-radius:12px; color:var(--text); font-size:18px; display:flex;
+    align-items:center; justify-content:center; cursor:pointer;
+  }
+  .iconbtn.active{border-color:var(--accent); color:var(--accent);}
+  .sub{color:var(--muted); font-size:12.5px; margin-top:6px;}
+
+  /* Filter panel */
+  .filters{display:none; margin-top:12px; background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:14px;}
+  .filters.open{display:block;}
+  .filters h4{margin:2px 0 8px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{padding:7px 12px; border-radius:999px; border:1px solid var(--line);
+    background:var(--card2); color:var(--text); font-size:13px; cursor:pointer; user-select:none;}
+  .chip.on{background:var(--accent); border-color:var(--accent); color:#06231a; font-weight:700;}
+  .rangerow{display:flex; align-items:center; gap:12px; margin:6px 0 14px;}
+  .rangerow input[type=range]{flex:1; accent-color:var(--accent);}
+  .rangeval{font-variant-numeric:tabular-nums; font-weight:700; min-width:64px; text-align:right;}
+  .filters .foot{display:flex; justify-content:space-between; margin-top:10px;}
+  .linkbtn{background:none; border:none; color:var(--accent); font-size:14px; cursor:pointer; padding:6px;}
+
+  /* List */
+  .list{padding:14px 0 40px; display:flex; flex-direction:column; gap:12px;}
+  .card{display:flex; gap:12px; background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:12px; cursor:pointer;}
+  .cover{position:relative; width:64px; height:64px; border-radius:10px; flex:none;
+    background:var(--card2) center/cover no-repeat; overflow:hidden;}
+  .cover .play{position:absolute; right:3px; bottom:3px; width:24px; height:24px; border-radius:50%;
+    background:rgba(0,0,0,.6); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;}
+  .cbody{flex:1; min-width:0;}
+  .toprow{display:flex; align-items:center; gap:7px; margin-bottom:3px;}
+  .rank{font-size:11px; font-weight:800; color:var(--muted);}
+  .badge{font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px;}
+  .badge.new{background:var(--orange); color:#3a2000;}
+  .badge.up{color:var(--accent);}
+  .badge.down{color:var(--red);}
+  .badge.eq{color:var(--muted);}
+  .growth{margin-left:auto; font-size:12.5px; font-weight:800; color:#06231a;
+    background:var(--accent); padding:3px 9px; border-radius:999px;}
+  .name{font-weight:700; font-size:15.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .artist{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .meta{display:flex; gap:12px; margin-top:5px; font-size:11.5px; color:var(--muted); flex-wrap:wrap;}
+  .meta b{color:var(--text); font-weight:600;}
+  .gchips{display:flex; gap:6px; margin-top:7px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  .gchip{font-size:10.5px; padding:3px 8px; border-radius:999px; background:var(--card2);
+    border:1px solid var(--line); white-space:nowrap; color:var(--muted);}
+
+  .status{padding:60px 20px; text-align:center; color:var(--muted);}
+  .status button{margin-top:14px;}
+  .primary{background:var(--accent); color:#06231a; border:none; font-weight:800;
+    padding:11px 18px; border-radius:12px; font-size:15px; cursor:pointer;}
+
+  /* Detail sheet */
+  .sheet{position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.5);
+    display:none; align-items:flex-end; backdrop-filter:blur(4px);}
+  .sheet.open{display:flex;}
+  .sheetinner{background:linear-gradient(180deg,var(--bg2),var(--bg)); width:100%;
+    max-width:680px; margin:0 auto; border-radius:22px 22px 0 0; border:1px solid var(--line);
+    max-height:92vh; overflow-y:auto; padding:10px 18px calc(env(safe-area-inset-bottom) + 26px);}
+  .grab{width:38px; height:5px; border-radius:3px; background:var(--line); margin:8px auto 14px;}
+  .dcover{width:200px; height:200px; border-radius:18px; margin:0 auto 16px; display:block;
+    background:var(--card2) center/cover no-repeat; box-shadow:0 14px 40px rgba(0,0,0,.5);}
+  .dtitle{text-align:center; font-size:22px; font-weight:800;}
+  .dartist{text-align:center; color:var(--muted); margin-top:2px;}
+  .dgrowth{text-align:center; margin:16px 0; background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:16px;}
+  .dgrowth .big{font-size:46px; font-weight:900; color:var(--accent); line-height:1;}
+  .dgrowth .lab{color:var(--muted); font-size:12.5px; margin-top:6px;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;}
+  .mcard{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px;}
+  .mcard .k{font-size:11px; color:var(--muted);}
+  .mcard .v{font-size:18px; font-weight:700; margin-top:4px;}
+  .mcard .v small{color:var(--accent); font-size:12px; font-weight:700;}
+  .drows{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px 12px; margin-bottom:16px;}
+  .drow{display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px;}
+  .drow:last-child{border-bottom:none;}
+  .drow .k{color:var(--muted); width:70px; flex:none; font-size:12.5px;}
+  .actions{display:flex; flex-direction:column; gap:10px;}
+  .btn{display:flex; align-items:center; justify-content:center; gap:8px; padding:13px;
+    border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; border:1px solid var(--line);
+    background:var(--card); color:var(--text); text-decoration:none;}
+  .btn.fill{background:var(--accent); color:#06231a; border-color:var(--accent);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="hrow">
+      <div class="logo"><img src="./pwa-icon-192.png" alt=""/> Remix Radar</div>
+      <div class="spacer"></div>
+      <button class="iconbtn" id="refreshBtn" title="Aggiorna">⟳</button>
+      <button class="iconbtn" id="filterBtn" title="Filtri">⚙︎</button>
+    </div>
+    <div class="sub" id="sub">Carico…</div>
+
+    <div class="filters" id="filters">
+      <h4>Crescita 24h minima</h4>
+      <div class="rangerow">
+        <input type="range" id="growthRange" min="0" max="3000" step="50" value="0" />
+        <span class="rangeval" id="growthVal">0%</span>
+      </div>
+      <h4>Solo usciti negli ultimi 30 giorni</h4>
+      <div class="chips" style="margin-bottom:14px;">
+        <span class="chip" data-fresh="1">🆕 Solo brani freschi</span>
+      </div>
+      <h4>Piattaforme attive</h4>
+      <div class="chips" id="platChips" style="margin-bottom:14px;"></div>
+      <h4>Generi</h4>
+      <div class="chips" id="genreChips"></div>
+      <div class="foot">
+        <button class="linkbtn" id="resetBtn">Reset filtri</button>
+        <button class="linkbtn" id="closeFiltersBtn">Fatto</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="content"><div class="status">Carico trending…</div></div>
+</main>
+
+<div class="sheet" id="sheet">
+  <div class="sheetinner" id="sheetinner"></div>
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+const FEED_URL = "./feed.json";
+const state = { feed:null, filter:{ minGrowth:0, genres:new Set(), platforms:new Set(), fresh:false }, playingId:null };
+const audio = document.getElementById('audio');
+
+const fmt = n => {
+  if(n==null || n<=0) return "—";
+  if(n>=1e6) return (n/1e6).toFixed(1)+"M";
+  if(n>=1e3) return (n/1e3).toFixed(1)+"K";
+  return ""+Math.round(n);
+};
+const esc = s => (s==null?"":(""+s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Feed items have no `id` field (in the SwiftUI model it's computed); derive the
+// same stable id here: spotify_id, else "name|artist".
+const idOf = t => t.spotify_id || (t.name+"|"+t.artist);
+
+function platformActive(p, t){
+  switch(p){
+    case "spotify": return (t.streams_24h||0)>0;
+    case "tiktok":  return (t.tiktok_24h_videos||0)>0;
+    case "youtube": return (t.youtube_24h_pct||0)>0;
+    case "shazam":  return (t.shazam_total||0)>0;
+  }
+}
+const PLATFORMS = [["spotify","Spotify"],["tiktok","TikTok"],["youtube","YouTube"],["shazam","Shazam"]];
+
+function parseDate(s){
+  if(!s) return null;
+  const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/.exec(s);
+  if(!m) return null;
+  return new Date(Date.UTC(+m[1], (m[2]?+m[2]-1:0), (m[3]?+m[3]:1)));
+}
+
+function matches(t){
+  const f = state.filter;
+  if(f.minGrowth>0 && (t.growth_24h_pct||0) < f.minGrowth) return false;
+  if(f.platforms.size && ![...f.platforms].some(p=>platformActive(p,t))) return false;
+  if(f.genres.size){
+    const g = (t.genres||[]).map(x=>x.toLowerCase());
+    if(![...f.genres].some(sel=>g.some(x=>x.includes(sel.toLowerCase())))) return false;
+  }
+  if(f.fresh){
+    const d = parseDate(t.release_date);
+    if(!d) return false;
+    const days = (Date.now()-d.getTime())/86400000;
+    if(days>30) return false;
+  }
+  return true;
+}
+
+function deltaBadge(d){
+  if(!d) return "";
+  if(d==="NEW") return '<span class="badge new">NEW</span>';
+  if(d[0]==="↑"||d[0]==="+"||/^↑/.test(d)) return '<span class="badge up">'+esc(d)+'</span>';
+  if(/^↓/.test(d)) return '<span class="badge down">'+esc(d)+'</span>';
+  if(d==="=") return '<span class="badge eq">=</span>';
+  return '<span class="badge eq">'+esc(d)+'</span>';
+}
+
+function render(){
+  const c = document.getElementById('content');
+  if(!state.feed){ return; }
+  const items = state.feed.items.filter(matches);
+  if(!items.length){
+    c.innerHTML = '<div class="status">Nessun brano corrisponde ai filtri.<br><button class="primary" id="rs2">Reset filtri</button></div>';
+    document.getElementById('rs2').onclick = resetFilters;
+    return;
+  }
+  c.innerHTML = '<div class="list">'+items.map(cardHTML).join('')+'</div>';
+  [...c.querySelectorAll('.card')].forEach(el=>{
+    el.addEventListener('click', e=>{
+      if(e.target.closest('.play')) return;
+      openDetail(el.dataset.id);
+    });
+  });
+  [...c.querySelectorAll('.play')].forEach(el=>{
+    el.addEventListener('click', e=>{ e.stopPropagation(); togglePlay(el.dataset.id); });
+  });
+}
+
+function cardHTML(t){
+  const id = idOf(t);
+  const cover = t.cover_url ? `style="background-image:url('${esc(t.cover_url)}')"` : "";
+  const playing = state.playingId===id;
+  const play = t.preview_url ? `<div class="play" data-id="${esc(id)}">${playing?"❚❚":"▶"}</div>` : "";
+  const tk = (t.tiktok_24h_videos||0)>0 ? `<span>🎬 <b>${t.tiktok_24h_videos}</b> TikTok</span>` : "";
+  const gchips = (t.genres||[]).slice(0,3).map(g=>`<span class="gchip">${esc(g)}</span>`).join('');
+  return `<div class="card" data-id="${esc(id)}">
+    <div class="cover" ${cover}>${play}</div>
+    <div class="cbody">
+      <div class="toprow">
+        <span class="rank">#${t.rank}</span>${deltaBadge(t.delta)}
+        <span class="growth">+${(t.growth_24h_pct||0).toFixed(0)}% 24h</span>
+      </div>
+      <div class="name">${esc(t.name)}</div>
+      <div class="artist">${esc(t.artist)}</div>
+      <div class="meta"><span>🎵 <b>${fmt(t.streams_24h)}</b> 24h</span>${tk}</div>
+      ${gchips?`<div class="gchips">${gchips}</div>`:""}
+    </div>
+  </div>`;
+}
+
+function openDetail(id){
+  const t = state.feed.items.find(x=>idOf(x)===id);
+  if(!t) return;
+  const cover = t.cover_url ? `style="background-image:url('${esc(t.cover_url)}')"` : "";
+  const playing = state.playingId===id;
+  const rows = [];
+  if(t.release_date) rows.push(["Uscita", esc(t.release_date)]);
+  if(t.label) rows.push(["Label", esc(t.label)]);
+  if((t.genres||[]).length) rows.push(["Generi", t.genres.map(esc).join(" · ")]);
+  const tkDetail = (t.tiktok_24h_pct||0)>0 ? ` <small>+${t.tiktok_24h_pct.toFixed(0)}%</small>` : "";
+  const yt = "https://www.youtube.com/results?search_query="+encodeURIComponent(t.name+" "+t.artist);
+  document.getElementById('sheetinner').innerHTML = `
+    <div class="grab"></div>
+    <div class="dcover" ${cover}></div>
+    <div class="dtitle">${esc(t.name)}</div>
+    <div class="dartist">${esc(t.artist)}</div>
+    <div class="dgrowth"><div class="big">+${(t.growth_24h_pct||0).toFixed(1)}%</div>
+      <div class="lab">Crescita streams Spotify nelle ultime 24h</div></div>
+    <div class="grid">
+      <div class="mcard"><div class="k">Streams 24h</div><div class="v">${fmt(t.streams_24h)}</div></div>
+      <div class="mcard"><div class="k">Streams totali</div><div class="v">${fmt(t.streams_total)}</div></div>
+      <div class="mcard"><div class="k">TikTok 24h</div><div class="v">${fmt(t.tiktok_24h_videos)}${tkDetail}</div></div>
+      <div class="mcard"><div class="k">Popolarità Spotify</div><div class="v">${t.spotify_popularity!=null?t.spotify_popularity+"/100":"—"}</div></div>
+    </div>
+    ${rows.length?`<div class="drows">${rows.map(r=>`<div class="drow"><span class="k">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div>`:""}
+    <div class="actions">
+      ${t.preview_url?`<button class="btn fill" id="dPlay">${playing?"❚❚ Stop preview":"▶ Ascolta preview 30s"}</button>`:""}
+      ${t.spotify_url?`<a class="btn" href="${esc(t.spotify_url)}" target="_blank" rel="noopener">↗ Apri su Spotify</a>`:""}
+      <a class="btn" href="${yt}" target="_blank" rel="noopener">▶ Cerca su YouTube</a>
+    </div>`;
+  const dp = document.getElementById('dPlay');
+  if(dp) dp.onclick = ()=>{ togglePlay(t.id); openDetail(id); };
+  document.getElementById('sheet').classList.add('open');
+}
+
+function closeSheet(){ document.getElementById('sheet').classList.remove('open'); }
+document.getElementById('sheet').addEventListener('click', e=>{ if(e.target.id==='sheet') closeSheet(); });
+
+function togglePlay(id){
+  const t = state.feed.items.find(x=>idOf(x)===id);
+  if(!t || !t.preview_url) return;
+  if(state.playingId===id){ audio.pause(); state.playingId=null; render(); return; }
+  audio.src = t.preview_url; audio.play().catch(()=>{});
+  state.playingId = id; render();
+}
+audio.addEventListener('ended', ()=>{ state.playingId=null; render(); });
+
+/* ---- Filters UI ---- */
+function buildFilterChips(){
+  document.getElementById('platChips').innerHTML =
+    PLATFORMS.map(([k,l])=>`<span class="chip" data-plat="${k}">${l}</span>`).join('');
+  const genres = [...new Set(state.feed.items.flatMap(t=>t.genres||[]))].sort();
+  document.getElementById('genreChips').innerHTML =
+    genres.map(g=>`<span class="chip" data-genre="${esc(g)}">${esc(g)}</span>`).join('') || '<span class="sub">Nessun genere</span>';
+  bindChips();
+}
+function bindChips(){
+  document.querySelectorAll('[data-plat]').forEach(el=>el.onclick=()=>{
+    const k=el.dataset.plat; toggleSet(state.filter.platforms,k); el.classList.toggle('on'); render();
+  });
+  document.querySelectorAll('[data-genre]').forEach(el=>el.onclick=()=>{
+    const k=el.dataset.genre; toggleSet(state.filter.genres,k); el.classList.toggle('on'); render();
+  });
+  document.querySelectorAll('[data-fresh]').forEach(el=>el.onclick=()=>{
+    state.filter.fresh=!state.filter.fresh; el.classList.toggle('on'); render();
+  });
+}
+function toggleSet(s,k){ s.has(k)?s.delete(k):s.add(k); }
+function resetFilters(){
+  state.filter = { minGrowth:0, genres:new Set(), platforms:new Set(), fresh:false };
+  document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));
+  const r=document.getElementById('growthRange'); r.value=0; document.getElementById('growthVal').textContent="0%";
+  syncFilterBtn(); render();
+}
+function syncFilterBtn(){
+  const f=state.filter, active=f.minGrowth>0||f.genres.size||f.platforms.size||f.fresh;
+  document.getElementById('filterBtn').classList.toggle('active', !!active);
+}
+document.getElementById('growthRange').addEventListener('input', e=>{
+  state.filter.minGrowth=+e.target.value;
+  document.getElementById('growthVal').textContent=e.target.value+"%";
+  syncFilterBtn(); render();
+});
+document.getElementById('filterBtn').onclick=()=>document.getElementById('filters').classList.toggle('open');
+document.getElementById('closeFiltersBtn').onclick=()=>document.getElementById('filters').classList.remove('open');
+document.getElementById('resetBtn').onclick=resetFilters;
+document.getElementById('refreshBtn').onclick=()=>load(true);
+
+/* ---- Load ---- */
+function relTime(iso){
+  const d=new Date(iso), diff=(Date.now()-d.getTime())/1000;
+  if(diff<3600) return Math.max(1,Math.round(diff/60))+" min fa";
+  if(diff<86400) return Math.round(diff/3600)+"h fa";
+  return Math.round(diff/86400)+"g fa";
+}
+async function load(force){
+  const sub=document.getElementById('sub');
+  try{
+    if(force) sub.textContent="Aggiorno…";
+    const res = await fetch(FEED_URL+"?t="+Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const feed = await res.json();
+    state.feed = feed;
+    try{ localStorage.setItem("rr_feed", JSON.stringify(feed)); }catch(e){}
+    afterLoad();
+  }catch(err){
+    const cached = localStorage.getItem("rr_feed");
+    if(cached){ state.feed=JSON.parse(cached); afterLoad(); sub.textContent+=" · offline"; }
+    else { document.getElementById('content').innerHTML='<div class="status">Impossibile caricare il feed.<br>'+esc(err.message)+'<br><button class="primary" id="rt">Riprova</button></div>'; document.getElementById('rt').onclick=()=>load(true); }
+  }
+}
+function afterLoad(){
+  document.getElementById('sub').textContent =
+    "Top trending · crescita 24h · aggiornato "+relTime(state.feed.generated_at);
+  buildFilterChips();
+  render();
+}
+
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
+load(false);
+</script>
+</body>
+</html>
