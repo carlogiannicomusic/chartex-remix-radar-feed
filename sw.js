@@ -1,7 +1,10 @@
 // Remix Radar PWA service worker.
-// Cache the app shell so it opens offline; always try network-first for the
-// feed so the data is fresh, falling back to cache when offline.
-const SHELL = "rr-shell-v9";
+// Strategy:
+//  - HTML / navigation  -> NETWORK-FIRST  (always show the latest design when online,
+//                          fall back to cached shell only when offline)
+//  - feed / data JSON   -> NETWORK-FIRST  (fresh data, cached fallback)
+//  - static assets      -> CACHE-FIRST    (icons/manifest, versioned by SHELL)
+const SHELL = "rr-shell-v10";
 const SHELL_FILES = [
   "./",
   "./index.html",
@@ -23,19 +26,40 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+function isNavigation(req) {
+  return req.mode === "navigate" ||
+         (req.method === "GET" && (req.headers.get("accept") || "").includes("text/html"));
+}
+
 self.addEventListener("fetch", (e) => {
-  const url = new URL(e.request.url);
-  // Feed: network-first.
-  if (url.pathname.endsWith("/feed.json")) {
+  const req = e.request;
+  const url = new URL(req.url);
+
+  // HTML / navigation: network-first so the latest UI always wins when online.
+  if (isNavigation(req)) {
     e.respondWith(
-      fetch(e.request).then((res) => {
+      fetch(req).then((res) => {
         const copy = res.clone();
-        caches.open(SHELL).then((c) => c.put("./feed.json", copy));
+        caches.open(SHELL).then((c) => { c.put("./index.html", copy); c.put("./", copy.clone()); });
         return res;
-      }).catch(() => caches.match("./feed.json"))
+      }).catch(() => caches.match("./index.html").then((hit) => hit || caches.match("./")))
     );
     return;
   }
-  // Shell: cache-first.
-  e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request)));
+
+  // Data feeds: network-first.
+  if (url.pathname.endsWith("/feed.json") || url.pathname.endsWith("/artists.json") || url.pathname.endsWith("/sounds.json")) {
+    const key = "./" + url.pathname.split("/").pop();
+    e.respondWith(
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(SHELL).then((c) => c.put(key, copy));
+        return res;
+      }).catch(() => caches.match(key))
+    );
+    return;
+  }
+
+  // Static assets: cache-first.
+  e.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
 });

@@ -1232,7 +1232,14 @@ async function load(force){const sub=document.getElementById('sub');
   }catch(err){const cached=loadJSON(LS.feed,null);if(cached){state.feed=cached;afterLoad();}
     else if(state.view==="radar"){document.getElementById('content').innerHTML='<div class="status"><div class="big">Segnale<em> perso</em></div>Impossibile caricare il feed.<br><br><button class="primary" id="rt">↻ Riprova</button></div>';document.getElementById('rt').onclick=()=>load(true);}}}
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{});}
+if("serviceWorker" in navigator){
+  let reloaded=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(reloaded)return; reloaded=true; location.reload(); });
+  navigator.serviceWorker.register("./sw.js").then(reg=>{
+    reg.update();
+    setInterval(()=>reg.update(),60*60*1000); // hourly update check while open
+  }).catch(()=>{});
+}
 render();load(false);
 </script>
 </body>
