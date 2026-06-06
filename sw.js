@@ -4,7 +4,7 @@
 //                          fall back to cached shell only when offline)
 //  - feed / data JSON   -> NETWORK-FIRST  (fresh data, cached fallback)
 //  - static assets      -> CACHE-FIRST    (icons/manifest, versioned by SHELL)
-const SHELL = "rr-shell-v14";
+const SHELL = "rr-shell-v15";
 const SHELL_FILES = [
   "./",
   "./index.html",

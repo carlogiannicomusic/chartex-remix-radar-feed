@@ -6,12 +6,7 @@
     </linearGradient>
   </defs>
   <rect width="1024" height="1024" fill="url(#bg)"/>
-  <g fill="#FFFFFF">
-    <rect x="170" y="462" width="78" height="100" rx="39"/>
-    <rect x="298" y="382" width="78" height="260" rx="39"/>
-    <rect x="426" y="282" width="78" height="460" rx="39"/>
-    <rect x="554" y="212" width="78" height="600" rx="39"/>
-    <rect x="682" y="332" width="78" height="360" rx="39"/>
-    <rect x="810" y="442" width="78" height="140" rx="39"/>
-  </g>
+  <text x="512" y="512" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central"
+        font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="800"
+        font-size="560" letter-spacing="-40">RR</text>
 </svg>
