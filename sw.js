@@ -1,7 +1,7 @@
 // Remix Radar PWA service worker.
 // Cache the app shell so it opens offline; always try network-first for the
 // feed so the data is fresh, falling back to cache when offline.
-const SHELL = "rr-shell-v5";
+const SHELL = "rr-shell-v6";
 const SHELL_FILES = [
   "./",
   "./index.html",

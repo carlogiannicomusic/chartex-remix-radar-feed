@@ -168,6 +168,7 @@
 
 <nav class="tabbar">
   <button class="tab" id="tabRadar"><span class="ic">📡</span>Radar</button>
+  <button class="tab" id="tabArtists"><span class="ic">🎤</span>Artisti</button>
   <button class="tab" id="tabLib"><span class="ic">❤️</span>Libreria</button>
 </nav>
 
@@ -180,6 +181,7 @@ const LS={likes:"rr_likes_v1",playlists:"rr_playlists_v1",feed:"rr_feed_v3",prem
 const state={feed:null,view:"radar",platform:null,window:null,currentPlaylist:null,
   filter:{q:"",genres:new Set(),labels:new Set(),fresh:false,min:null,max:null},
   playingId:null,openId:null,
+  artistsFeed:null,artistPlatform:null,artistWindow:null,artistQ:"",
   likes:loadJSON(LS.likes,{}),playlists:loadJSON(LS.playlists,[])};
 const audio=document.getElementById('audio');
 
@@ -282,6 +284,7 @@ function rerender(){render();if(document.getElementById('sheet').classList.conta
 function render(){syncHeader();syncTabs();renderPlat();renderSeg();renderSearch();
   const c=document.getElementById('content');
   if(state.view==="radar")return renderRadar(c);
+  if(state.view==="artists")return renderArtists(c);
   if(state.view==="library")return renderLibrary(c);
   if(state.view==="playlist")return renderPlaylist(c);
 }
@@ -388,14 +391,59 @@ function syncHeader(){const h=document.getElementById('headerRow'),sub=document.
     sub.style.display="block";const pm=platformMeta(state.platform),wm=windowMeta(state.window);
     sub.textContent=state.feed?`${pm?pm.label:""} · ${wm?wm.label:""} · agg. ${relTime(state.feed.generated_at)}`:"Carico…";
     document.getElementById('refreshBtn').onclick=()=>load(true);document.getElementById('filterBtn').onclick=()=>fEl.classList.toggle('open');
-  }else if(state.view==="library"){h.innerHTML=`<div class="htitle">Libreria</div>`;sub.style.display="none";fEl.classList.remove('open');}
+  }else if(state.view==="artists"){const pm=aPlatformMeta(state.artistPlatform),wm=aWindowMeta(state.artistWindow);h.innerHTML=`<div class="logo"><img src="./pwa-icon-192.png" alt=""/> Artisti</div>`;sub.style.display="block";sub.textContent=state.artistsFeed?`${pm?pm.label:""} · ${wm?wm.label:""}`:"Carico…";fEl.classList.remove('open');}
+  else if(state.view==="library"){h.innerHTML=`<div class="htitle">Libreria</div>`;sub.style.display="none";fEl.classList.remove('open');}
   else if(state.view==="playlist"){const p=state.playlists.find(x=>x.id===state.currentPlaylist);
     h.innerHTML=`<button class="backbtn" id="backBtn">‹ Libreria</button><div class="spacer"></div><button class="iconbtn" id="renBtn">✏️</button><button class="iconbtn" id="delBtn">🗑</button>`;
     sub.style.display="block";sub.textContent=p?(esc(p.name)+" · "+p.tracks.length+" bran"+(p.tracks.length===1?'o':'i')):"";fEl.classList.remove('open');
     document.getElementById('backBtn').onclick=()=>goView("library");document.getElementById('renBtn').onclick=()=>renamePlaylist(state.currentPlaylist);document.getElementById('delBtn').onclick=()=>deletePlaylist(state.currentPlaylist);}}
-function syncTabs(){document.getElementById('tabRadar').classList.toggle('on',state.view==="radar");document.getElementById('tabLib').classList.toggle('on',state.view==="library"||state.view==="playlist");}
-function goView(v){state.view=v;closeSheet();window.scrollTo(0,0);render();}
-document.getElementById('tabRadar').onclick=()=>goView("radar");document.getElementById('tabLib').onclick=()=>goView("library");
+function syncTabs(){document.getElementById('tabRadar').classList.toggle('on',state.view==="radar");document.getElementById('tabArtists').classList.toggle('on',state.view==="artists");document.getElementById('tabLib').classList.toggle('on',state.view==="library"||state.view==="playlist");}
+function goView(v){state.view=v;closeSheet();window.scrollTo(0,0);if(v==="artists"&&!state.artistsFeed)loadArtists();render();}
+document.getElementById('tabRadar').onclick=()=>goView("radar");document.getElementById('tabArtists').onclick=()=>goView("artists");document.getElementById('tabLib').onclick=()=>goView("library");
+
+/* ---- Artists tab ---- */
+function aPlatforms(){return state.artistsFeed?.platforms||[];}
+function aWindows(){return state.artistsFeed?.windows||[];}
+function aWindowMeta(k){return aWindows().find(w=>w.key===k);}
+function aPlatformMeta(k){return aPlatforms().find(p=>p.key===k);}
+function aLocked(k){const w=aWindowMeta(k);return w&&w.tier==="premium"&&!isPremium();}
+function aMetricValue(a,p,w){if(w==="24h")return a[p+"_24h_pct"]||0;if(w==="7d")return a[p+"_7d"]||0;return a[p+"_total"]||0;}
+function aHeadline(a){const p=state.artistPlatform,w=state.artistWindow,pm=aPlatformMeta(p);
+  if(w==="24h")return "+"+(a[p+"_24h_pct"]||0).toFixed(0)+"% 24h";return fmt(aMetricValue(a,p,w))+" "+(pm?pm.metric_label:"")+(w==="7d"?" 7g":"");}
+async function loadArtists(){
+  try{const r=await fetch("./artists.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;state.artistsFeed=await r.json();
+    if(!state.artistPlatform)state.artistPlatform=(aPlatforms()[1]||aPlatforms()[0])?.key||"spotify";
+    if(!state.artistWindow)state.artistWindow=isPremium()?(aWindows()[0]?.key||"24h"):(state.artistsFeed.free_window||"month");
+    if(state.view==="artists")render();
+  }catch(e){if(state.view==="artists")document.getElementById('content').innerHTML='<div class="status">Impossibile caricare gli artisti.</div>';}
+}
+function renderArtists(c){
+  if(!state.artistsFeed){c.innerHTML='<div class="status">Carico artisti…</div>';return;}
+  const plats=aPlatforms(),wins=aWindows();
+  let html='<div class="plats">'+plats.map(p=>`<button class="plat ${p.key===state.artistPlatform?'on':''}" data-aplat="${p.key}">${esc(p.label)}<span class="pm">${esc(p.metric_label)}</span></button>`).join('')+'</div>';
+  html+='<div class="seg" style="margin-top:8px;">'+wins.map(w=>`<button class="${w.key===state.artistWindow?'on':''}" data-awin="${w.key}">${esc(w.label)}${aLocked(w.key)?' <span class="lock">🔒</span>':''}</button>`).join('')+'</div>';
+  html+='<div class="searchrow"><input id="aSearch" type="search" placeholder="Cerca artista…" value="'+esc(state.artistQ)+'"></div>';
+  if(aLocked(state.artistWindow)){html+='<div class="lockbox"><div class="ic">🔒</div><h3>'+esc(aWindowMeta(state.artistWindow)?.label||"")+' — Premium</h3><p>Classifiche artisti 24h e 7 giorni sono Premium.</p><button class="demo" id="aDemo">Sblocca in modalità demo</button></div>';
+    c.innerHTML=html;wireArtistControls(c);const dz=document.getElementById('aDemo');if(dz)dz.onclick=()=>{setPremium(true);render();};return;}
+  const ids=(state.artistsFeed.charts?.[state.artistPlatform]?.[state.artistWindow])||[];
+  let rows=ids.map(id=>state.artistsFeed.artists[id]).filter(Boolean);
+  if(state.artistQ){const q=state.artistQ.toLowerCase();rows=rows.filter(a=>(a.name||"").toLowerCase().includes(q));}
+  html+='<div class="list">'+rows.map((a,i)=>artistCardHTML(a,ids.indexOf(a.id)+1)).join('')+'</div>';
+  c.innerHTML=html;wireArtistControls(c);
+  c.querySelectorAll('[data-artist]').forEach(el=>el.onclick=()=>{const a=state.artistsFeed.artists[el.dataset.artist];if(a&&a.spotify_id)window.open("https://open.spotify.com/artist/"+a.spotify_id,"_blank");});
+}
+function artistCardHTML(a,rank){
+  const img=a.image_url?`style="background-image:url('${esc(a.image_url)}')"`:"";
+  const meta=[];if((a.spotify_total||0)>0)meta.push(`🎵 <b>${fmt(a.spotify_total)}</b>`);if((a.tiktok_total||0)>0)meta.push(`🎬 <b>${fmt(a.tiktok_total)}</b>`);if((a.youtube_total||0)>0)meta.push(`▶️ <b>${fmt(a.youtube_total)}</b>`);
+  return `<div class="card" data-artist="${esc(a.id)}"><div class="cover" ${img};border-radius:50%"></div>
+    <div class="cbody"><div class="toprow"><span class="rank">#${rank}</span><span class="metricpill" style="margin-left:auto;">${aHeadline(a)}</span></div>
+    <div class="name">${esc(a.name)}</div><div class="meta">${meta.slice(0,3).map(b=>`<span>${b}</span>`).join('')}</div></div></div>`;
+}
+function wireArtistControls(c){
+  c.querySelectorAll('[data-aplat]').forEach(el=>el.onclick=()=>{state.artistPlatform=el.dataset.aplat;window.scrollTo(0,0);render();});
+  c.querySelectorAll('[data-awin]').forEach(el=>el.onclick=()=>{state.artistWindow=el.dataset.awin;window.scrollTo(0,0);render();});
+  const s=c.querySelector('#aSearch');if(s)s.oninput=e=>{state.artistQ=e.target.value.trim();renderArtists(document.getElementById('content'));};
+}
 
 function filterActive(){const f=state.filter;return f.q||f.genres.size||f.labels.size||f.fresh||f.min!=null||f.max!=null;}
 function buildFilterChips(){
