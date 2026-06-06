@@ -1,7 +1,7 @@
 {
   "name": "Remix Radar",
   "short_name": "Remix Radar",
-  "description": "I brani trending del giorno con maggiore crescita 24h, da remixare.",
+  "description": "The day's fastest-rising songs and sounds to remix — across TikTok, Spotify, YouTube and Shazam.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

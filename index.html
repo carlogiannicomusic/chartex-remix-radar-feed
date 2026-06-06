@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
@@ -248,7 +248,7 @@
   <div class="controls" id="controls"></div>
 </header>
 
-<main class="wrap"><div id="content"><div class="status"><div class="big">Carico…</div></div></div></main>
+<main class="wrap"><div id="content"><div class="status"><div class="big">Loading…</div></div></div></main>
 
 <div class="miniplayer" id="miniplayer">
   <div class="mart" id="mpArt"></div>
@@ -261,23 +261,23 @@
 
 <nav class="tabbar">
   <button class="tab" id="tabRadar"><svg class="icon"><use href="#i-radar"/></svg><span>Radar</span></button>
-  <button class="tab" id="tabArtists"><svg class="icon"><use href="#i-artists"/></svg><span>Artisti</span></button>
+  <button class="tab" id="tabArtists"><svg class="icon"><use href="#i-artists"/></svg><span>Artists</span></button>
   <button class="tab" id="tabSounds"><svg class="icon"><use href="#i-sound"/></svg><span>Sounds</span></button>
-  <button class="tab" id="tabLib"><svg class="icon"><use href="#i-library"/></svg><span>Libreria</span></button>
+  <button class="tab" id="tabLib"><svg class="icon"><use href="#i-library"/></svg><span>Library</span></button>
 </nav>
 
 <div class="welcome" id="welcome"><div class="welcard">
   <div class="ico" style="background-image:url('./pwa-icon-192.png')"></div>
   <h2>Remix Radar <span class="tag">BETA</span></h2>
   <p style="text-transform:uppercase;letter-spacing:.11em;font-size:10px;font-weight:700;color:var(--label2);margin:6px 0 0;">Digital Renaissance — Music Institute</p>
-  <p>I brani e i suoni che stanno esplodendo oggi su TikTok, Spotify, YouTube e Shazam — pronti da remixare.</p>
+  <p>The songs and sounds blowing up today on TikTok, Spotify, YouTube and Shazam — ready to remix.</p>
   <ul>
-    <li><svg class="icon"><use href="#i-radar"/></svg>Scopri i trending per piattaforma e finestra (24h, 7 giorni, mese).</li>
-    <li><svg class="icon"><use href="#i-play"/></svg>Ascolta l'anteprima e salva i preferiti in playlist.</li>
-    <li><svg class="icon"><use href="#i-search"/></svg>Cerca e filtra per genere, label e artista.</li>
+    <li><svg class="icon"><use href="#i-radar"/></svg>Discover what's trending by platform and window (24h, 7 days, month).</li>
+    <li><svg class="icon"><use href="#i-play"/></svg>Play previews and save favorites to playlists.</li>
+    <li><svg class="icon"><use href="#i-search"/></svg>Search and filter by genre, label and artist.</li>
   </ul>
-  <button class="btn fill" id="welStart">Inizia</button>
-  <p class="hint">Consiglio: in Safari tocca Condividi e poi "Aggiungi alla schermata Home" per usarla come app.</p>
+  <button class="btn fill" id="welStart">Get started</button>
+  <p class="hint">Tip: in Safari tap Share, then "Add to Home Screen" to use it as an app.</p>
 </div></div>
 
 <div class="sheet" id="sheet"><div class="sheetinner" id="sheetinner"></div></div>
@@ -304,6 +304,9 @@ const esc=s=>(s==null?"":(""+s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
 const mmss=s=>{if(!isFinite(s)||s<0)s=0;const m=Math.floor(s/60),x=Math.floor(s%60);return m+":"+(x<10?"0":"")+x;};
 const newId=()=>"pl_"+Math.random().toString(36).slice(2,9)+state.playlists.length;
 const ic=id=>`<svg class="icon"><use href="#i-${id}"/></svg>`;
+const WL={"24h":"24h","7d":"7 days","month":"Month"};
+const wlabel=w=>WL[w.key]||w.label;
+const tlabel=s=>s==="Indie / Altro"?"Indie / Other":s;
 
 /* feed accessors */
 function platforms(){return state.feed?.platforms||[];}
@@ -324,14 +327,14 @@ function trackById(id){
 function metricValue(t,p,w){if(w==="24h")return t[p+"_24h_pct"]||0;if(w==="7d")return t[p+"_7d"]||0;return t[p+"_total"]||0;}
 function headline(t){const p=state.platform,w=state.window,pm=platformMeta(p);
   if(w==="24h")return {v:"+"+(t[p+"_24h_pct"]||0).toFixed(0)+"%",u:"24H"};
-  return {v:fmt(metricValue(t,p,w)),u:(pm?pm.metric_label.toUpperCase():"")+(w==="7d"?" 7G":"")};}
+  return {v:fmt(metricValue(t,p,w)),u:(pm?pm.metric_label.toUpperCase():"")+(w==="7d"?" 7D":"")};}
 
 /* likes/playlists */
 const isLiked=id=>!!state.likes[id];
 function toggleLike(t){const id=t.id;if(state.likes[id])delete state.likes[id];else state.likes[id]=t;saveLikes();rerender();}
-function createPlaylist(name,first){const p={id:newId(),name:name||"Nuova playlist",createdAt:new Date().toISOString(),tracks:[]};if(first)p.tracks.push(first);state.playlists.unshift(p);savePlaylists();return p;}
-function renamePlaylist(id){const p=state.playlists.find(x=>x.id===id);if(!p)return;const n=prompt("Nome playlist:",p.name);if(n&&n.trim()){p.name=n.trim();savePlaylists();rerender();}}
-function deletePlaylist(id){const p=state.playlists.find(x=>x.id===id);if(!p)return;if(!confirm('Eliminare "'+p.name+'"?'))return;state.playlists=state.playlists.filter(x=>x.id!==id);savePlaylists();state.view==="playlist"?goView("library"):rerender();}
+function createPlaylist(name,first){const p={id:newId(),name:name||"New playlist",createdAt:new Date().toISOString(),tracks:[]};if(first)p.tracks.push(first);state.playlists.unshift(p);savePlaylists();return p;}
+function renamePlaylist(id){const p=state.playlists.find(x=>x.id===id);if(!p)return;const n=prompt("Playlist name:",p.name);if(n&&n.trim()){p.name=n.trim();savePlaylists();rerender();}}
+function deletePlaylist(id){const p=state.playlists.find(x=>x.id===id);if(!p)return;if(!confirm('Delete "'+p.name+'"?'))return;state.playlists=state.playlists.filter(x=>x.id!==id);savePlaylists();state.view==="playlist"?goView("library"):rerender();}
 const inPlaylist=(pl,id)=>pl.tracks.some(t=>t.id===id);
 function togglePlaylistTrack(plId,t){const p=state.playlists.find(x=>x.id===plId);if(!p)return;if(inPlaylist(p,t.id))p.tracks=p.tracks.filter(x=>x.id!==t.id);else p.tracks.push(t);savePlaylists();}
 
@@ -356,7 +359,7 @@ function metaBits(t){
   if((t.spotify_total||0)>0)b.push("Spotify "+fmt(t.spotify_total));
   if((t.tiktok_total||0)>0)b.push("TikTok "+fmt(t.tiktok_total));
   if((t.youtube_total||0)>0)b.push("YouTube "+fmt(t.youtube_total));
-  if(t.label_category)b.push(t.label_category);
+  if(t.label_category)b.push(tlabel(t.label_category));
   return b.slice(0,3).join("  ·  ");
 }
 
@@ -399,11 +402,11 @@ function render(){syncHeader();syncTabs();renderControls();
 }
 
 function renderRadar(c){
-  if(!state.feed){c.innerHTML='<div class="status"><div class="big">Carico…</div></div>';return;}
+  if(!state.feed){c.innerHTML='<div class="status"><div class="big">Loading…</div></div>';return;}
   if(isLocked(state.window)){c.innerHTML=paywallHTML(windowMeta(state.window));bindPaywall(c);return;}
   const ids=chartIds();const rows=ids.map(id=>state.feed.tracks[id]).filter(Boolean).filter(matches);
   state.queue=rows.map(t=>t.id);
-  if(!rows.length){c.innerHTML='<div class="status"><div class="big">Nessun risultato</div>Nessun brano per questi filtri.<br><br><button class="btn tinted" id="rs2" style="max-width:200px;margin:0 auto;">Reset filtri</button></div>';document.getElementById('rs2').onclick=resetFilters;return;}
+  if(!rows.length){c.innerHTML='<div class="status"><div class="big">No results</div>No tracks match these filters.<br><br><button class="btn tinted" id="rs2" style="max-width:200px;margin:0 auto;">Reset filters</button></div>';document.getElementById('rs2').onclick=resetFilters;return;}
   c.innerHTML='<div class="group">'+rows.map(t=>trackRow(t,{rank:ids.indexOf(t.id)+1})).join('')+'</div>';
   bindRows(c);
 }
@@ -411,34 +414,34 @@ function renderRadar(c){
 function paywallHTML(wm){
   return `<div class="lockbox">
     <div class="lc">${ic("lock")}</div>
-    <h3>${esc(wm?wm.label:"")} · Premium</h3>
-    <p>Le tendenze 24h e 7 giorni ti fanno cogliere i brani che esplodono prima che saturino, su ogni piattaforma.</p>
-    <div class="price">€${price().toFixed(2)}<small> / mese</small></div>
+    <h3>${esc(wm?wlabel(wm):"")} · Premium</h3>
+    <p>The 24h and 7-day trends let you catch songs blowing up before they saturate, on every platform.</p>
+    <div class="price">€${price().toFixed(2)}<small> / month</small></div>
     <ul>
-      <li>${ic("check")} 24h e 7 giorni su tutte le piattaforme</li>
-      <li>${ic("check")} Ricerca e filtri per genere e label</li>
-      <li>${ic("check")} Preferiti e playlist illimitate</li>
+      <li>${ic("check")} 24h and 7 days on every platform</li>
+      <li>${ic("check")} Search and filters by genre and label</li>
+      <li>${ic("check")} Unlimited favorites and playlists</li>
     </ul>
     <div class="actions">
-      <button class="btn fill" id="subBtn">Abbonati</button>
-      <button class="demo" id="demoBtn">Sblocca in modalità demo</button>
+      <button class="btn fill" id="subBtn">Subscribe</button>
+      <button class="demo" id="demoBtn">Unlock in demo mode</button>
     </div>
   </div>`;
 }
-function bindPaywall(c){c.querySelector('#subBtn').onclick=()=>alert("I pagamenti saranno attivati al lancio dell'app (Apple In-App Purchase / Stripe). Per ora usa lo sblocco demo per provare.");c.querySelector('#demoBtn').onclick=()=>{setPremium(true);render();};}
+function bindPaywall(c){c.querySelector('#subBtn').onclick=()=>alert("Payments go live at launch (Apple In-App Purchase / Stripe). For now use the demo unlock to try it.");c.querySelector('#demoBtn').onclick=()=>{setPremium(true);render();};}
 
 function renderLibrary(c){const liked=Object.values(state.likes);state.queue=liked.map(t=>t.id);let h='';
-  h+=`<div class="sectitle">Preferiti <span class="cnt">${liked.length}</span></div>`;
-  h+= liked.length?'<div class="group">'+liked.map(t=>trackRow(t,{hideRank:true,library:true})).join('')+'</div>':'<div class="status">Nessun brano salvato. Tocca il cuore su un brano per salvarlo.</div>';
-  h+=`<div class="sectitle">Playlist <span class="cnt">${state.playlists.length}</span><button class="add" id="newPl">${ic("plus")} Nuova</button></div>`;
-  h+= state.playlists.length?'<div class="group">'+state.playlists.map(p=>`<div class="plrow" data-pl="${p.id}"><div class="plart">${ic("library")}</div><div style="flex:1"><div class="plname">${esc(p.name)}</div><div class="plcount">${p.tracks.length} bran${p.tracks.length===1?'o':'i'}</div></div><span class="chev">${ic("chevron")}</span></div>`).join('')+'</div>':'<div class="status">Nessuna playlist. Creane una per i brani da remixare.</div>';
+  h+=`<div class="sectitle">Favorites <span class="cnt">${liked.length}</span></div>`;
+  h+= liked.length?'<div class="group">'+liked.map(t=>trackRow(t,{hideRank:true,library:true})).join('')+'</div>':'<div class="status">No saved tracks. Tap the heart on a track to save it.</div>';
+  h+=`<div class="sectitle">Playlist <span class="cnt">${state.playlists.length}</span><button class="add" id="newPl">${ic("plus")} New</button></div>`;
+  h+= state.playlists.length?'<div class="group">'+state.playlists.map(p=>`<div class="plrow" data-pl="${p.id}"><div class="plart">${ic("library")}</div><div style="flex:1"><div class="plname">${esc(p.name)}</div><div class="plcount">${p.tracks.length} track${p.tracks.length===1?'':'s'}</div></div><span class="chev">${ic("chevron")}</span></div>`).join('')+'</div>':'<div class="status">No playlists. Create one for tracks to remix.</div>';
   c.innerHTML=h;bindRows(c,{removeFrom:"likes"});
-  document.getElementById('newPl').onclick=()=>{const n=prompt("Nome della nuova playlist:","Da remixare");if(n&&n.trim()){createPlaylist(n.trim());rerender();}};
+  document.getElementById('newPl').onclick=()=>{const n=prompt("New playlist name:","To remix");if(n&&n.trim()){createPlaylist(n.trim());rerender();}};
   c.querySelectorAll('[data-pl]').forEach(el=>el.onclick=()=>{state.currentPlaylist=el.dataset.pl;goView("playlist");});
 }
 function renderPlaylist(c){const p=state.playlists.find(x=>x.id===state.currentPlaylist);if(!p){goView("library");return;}
   state.queue=p.tracks.map(t=>t.id);
-  c.innerHTML=p.tracks.length?'<div class="group">'+p.tracks.map(t=>trackRow(t,{hideRank:true,library:true,removeFrom:p.id})).join('')+'</div>':'<div class="status">Playlist vuota.<br>Apri un brano e tocca “Aggiungi a playlist”.</div>';
+  c.innerHTML=p.tracks.length?'<div class="group">'+p.tracks.map(t=>trackRow(t,{hideRank:true,library:true,removeFrom:p.id})).join('')+'</div>':'<div class="status">Empty playlist.<br>Open a track and tap "Add to playlist".</div>';
   bindRows(c,{removeFrom:p.id});}
 
 /* ---- Artists ---- */
@@ -449,18 +452,18 @@ function aPlatformMeta(k){return aPlatforms().find(p=>p.key===k);}
 function aLocked(k){const w=aWindowMeta(k);return w&&w.tier==="premium"&&!isPremium();}
 function aMetricValue(a,p,w){if(w==="24h")return a[p+"_24h_pct"]||0;if(w==="7d")return a[p+"_7d"]||0;return a[p+"_total"]||0;}
 function aHeadline(a){const p=state.artistPlatform,w=state.artistWindow,pm=aPlatformMeta(p);
-  if(w==="24h")return {v:"+"+(a[p+"_24h_pct"]||0).toFixed(0)+"%",u:"24H"};return {v:fmt(aMetricValue(a,p,w)),u:(pm?pm.metric_label.toUpperCase():"")+(w==="7d"?" 7G":"")};}
+  if(w==="24h")return {v:"+"+(a[p+"_24h_pct"]||0).toFixed(0)+"%",u:"24H"};return {v:fmt(aMetricValue(a,p,w)),u:(pm?pm.metric_label.toUpperCase():"")+(w==="7d"?" 7D":"")};}
 async function loadArtists(){try{const r=await fetch("./artists.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;state.artistsFeed=await r.json();
   if(!state.artistPlatform)state.artistPlatform=(aPlatforms()[1]||aPlatforms()[0])?.key||"spotify";
   if(!state.artistWindow)state.artistWindow=isPremium()?(aWindows()[0]?.key||"24h"):(state.artistsFeed.free_window||"month");
-  if(state.view==="artists")render();}catch(e){if(state.view==="artists")document.getElementById('content').innerHTML='<div class="status"><div class="big">Errore</div>Impossibile caricare gli artisti.</div>';}}
+  if(state.view==="artists")render();}catch(e){if(state.view==="artists")document.getElementById('content').innerHTML='<div class="status"><div class="big">Error</div>Unable to load artists.</div>';}}
 function renderArtists(c){
-  if(!state.artistsFeed){c.innerHTML='<div class="status"><div class="big">Carico…</div></div>';return;}
+  if(!state.artistsFeed){c.innerHTML='<div class="status"><div class="big">Loading…</div></div>';return;}
   if(aLocked(state.artistWindow)){c.innerHTML=paywallHTML(aWindowMeta(state.artistWindow));bindPaywall(c);return;}
   const ids=(state.artistsFeed.charts?.[state.artistPlatform]?.[state.artistWindow])||[];
   let rows=ids.map(id=>state.artistsFeed.artists[id]).filter(Boolean);
   if(state.artistQ){const q=state.artistQ.toLowerCase();rows=rows.filter(a=>(a.name||"").toLowerCase().includes(q));}
-  if(!rows.length){c.innerHTML='<div class="status"><div class="big">Nessun risultato</div></div>';return;}
+  if(!rows.length){c.innerHTML='<div class="status"><div class="big">No results</div></div>';return;}
   c.innerHTML='<div class="group">'+rows.map(a=>artistRow(a,ids.indexOf(a.id)+1)).join('')+'</div>';
   c.querySelectorAll('[data-artist]').forEach(el=>el.onclick=()=>{const a=state.artistsFeed.artists[el.dataset.artist];if(a&&a.spotify_id)window.open("https://open.spotify.com/artist/"+a.spotify_id,"_blank");});
 }
@@ -478,19 +481,19 @@ function sWindows(){return state.soundsFeed?.windows||[];}
 function sWindowMeta(k){return sWindows().find(w=>w.key===k);}
 function sLocked(k){const w=sWindowMeta(k);return w&&w.tier==="premium"&&!isPremium();}
 function sField(w){return w==="24h"?"video_24h":w==="7d"?"video_7d":"video_total";}
-function sHeadline(s){const w=state.soundWindow;return {v:fmt(s[sField(w)]||0),u:"VIDEO"+(w==="7d"?" 7G":w==="24h"?" 24H":"")};}
+function sHeadline(s){const w=state.soundWindow;return {v:fmt(s[sField(w)]||0),u:"VIDEO"+(w==="7d"?" 7D":w==="24h"?" 24H":"")};}
 async function loadSounds(){try{const r=await fetch("./sounds.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;state.soundsFeed=await r.json();
   Object.values(state.soundsFeed.sounds||{}).forEach(s=>{if(!s.cover_url)s.cover_url=s.image_url;});
   if(!state.soundWindow)state.soundWindow=isPremium()?(sWindows()[0]?.key||"24h"):(state.soundsFeed.free_window||"month");
-  if(state.view==="sounds")render();}catch(e){if(state.view==="sounds")document.getElementById('content').innerHTML='<div class="status"><div class="big">Errore</div>Impossibile caricare i sounds.</div>';}}
+  if(state.view==="sounds")render();}catch(e){if(state.view==="sounds")document.getElementById('content').innerHTML='<div class="status"><div class="big">Error</div>Unable to load sounds.</div>';}}
 function renderSounds(c){
-  if(!state.soundsFeed){c.innerHTML='<div class="status"><div class="big">Carico…</div></div>';return;}
+  if(!state.soundsFeed){c.innerHTML='<div class="status"><div class="big">Loading…</div></div>';return;}
   if(sLocked(state.soundWindow)){c.innerHTML=paywallHTML(sWindowMeta(state.soundWindow));bindPaywall(c);return;}
   const ids=(state.soundsFeed.charts?.[state.soundWindow])||[];
   let rows=ids.map(id=>state.soundsFeed.sounds[id]).filter(Boolean);
   if(state.soundQ){const q=state.soundQ.toLowerCase();rows=rows.filter(s=>(s.name||"").toLowerCase().includes(q)||(s.song_name||"").toLowerCase().includes(q)||(s.artist||"").toLowerCase().includes(q));}
   state.queue=rows.map(s=>s.id);
-  if(!rows.length){c.innerHTML='<div class="status"><div class="big">Nessun risultato</div></div>';return;}
+  if(!rows.length){c.innerHTML='<div class="status"><div class="big">No results</div></div>';return;}
   c.innerHTML='<div class="group">'+rows.map(s=>soundRow(s,ids.indexOf(s.id)+1)).join('')+'</div>';
   c.querySelectorAll('[data-sound]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-play]'))return;const s=state.soundsFeed.sounds[el.dataset.sound];if(s&&s.official_link)window.open(s.official_link,"_blank");}));
   c.querySelectorAll('[data-play]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();togglePlay(el.dataset.play);}));
@@ -511,34 +514,34 @@ function soundRow(s,rank){const hl=sHeadline(s);
 function renderControls(){
   const c=document.getElementById('controls'),fEl=document.getElementById('filters');
   if(state.view==="radar"&&state.feed){
-    c.innerHTML=platSeg(platforms(),state.platform,"plat")+winSeg(windowsMeta(),state.window,k=>isLocked(k),"win")+searchBox("Cerca brano, artista o label…",state.filter.q)+filtersHTML();
+    c.innerHTML=platSeg(platforms(),state.platform,"plat")+winSeg(windowsMeta(),state.window,k=>isLocked(k),"win")+searchBox("Search song, artist or label…",state.filter.q)+filtersHTML();
     wireRadarControls(c);return;
   }
   if(state.view==="artists"&&state.artistsFeed){
-    c.innerHTML=platSeg(aPlatforms(),state.artistPlatform,"aplat")+winSeg(aWindows(),state.artistWindow,k=>aLocked(k),"awin")+searchBox("Cerca artista…",state.artistQ);
+    c.innerHTML=platSeg(aPlatforms(),state.artistPlatform,"aplat")+winSeg(aWindows(),state.artistWindow,k=>aLocked(k),"awin")+searchBox("Search artist…",state.artistQ);
     c.querySelectorAll('[data-aplat]').forEach(el=>el.onclick=()=>{state.artistPlatform=el.dataset.aplat;window.scrollTo(0,0);render();});
     c.querySelectorAll('[data-awin]').forEach(el=>el.onclick=()=>{state.artistWindow=el.dataset.awin;window.scrollTo(0,0);render();});
     wireSearch(c,v=>{state.artistQ=v;renderArtists(document.getElementById('content'));});return;
   }
   if(state.view==="sounds"&&state.soundsFeed){
-    c.innerHTML=winSeg(sWindows(),state.soundWindow,k=>sLocked(k),"swin")+searchBox("Cerca sound, brano o artista…",state.soundQ);
+    c.innerHTML=winSeg(sWindows(),state.soundWindow,k=>sLocked(k),"swin")+searchBox("Search sound, song or artist…",state.soundQ);
     c.querySelectorAll('[data-swin]').forEach(el=>el.onclick=()=>{state.soundWindow=el.dataset.swin;window.scrollTo(0,0);render();});
     wireSearch(c,v=>{state.soundQ=v;renderSounds(document.getElementById('content'));});return;
   }
   c.innerHTML="";
 }
 function platSeg(arr,sel,attr){return '<div class="seg">'+arr.map(p=>`<button class="${p.key===sel?'on':''}" data-${attr}="${p.key}">${esc(p.label)}<span class="sub2">${esc(p.metric_label)}</span></button>`).join('')+'</div>';}
-function winSeg(arr,sel,lockFn,attr){return '<div class="seg">'+arr.map(w=>`<button class="${w.key===sel?'on':''}" data-${attr}="${w.key}">${esc(w.label)}${lockFn(w.key)?' <span class="lk">'+ic("lock")+'</span>':''}</button>`).join('')+'</div>';}
+function winSeg(arr,sel,lockFn,attr){return '<div class="seg">'+arr.map(w=>`<button class="${w.key===sel?'on':''}" data-${attr}="${w.key}">${esc(wlabel(w))}${lockFn(w.key)?' <span class="lk">'+ic("lock")+'</span>':''}</button>`).join('')+'</div>';}
 function searchBox(ph,val){return `<div class="search">${ic("search")}<input id="searchInput" type="search" placeholder="${esc(ph)}" value="${esc(val)}"></div>`;}
 function filtersHTML(){
   const lc=state.feed?.label_categories||[];
   const ids=chartIds();const genres=[...new Set(ids.map(id=>state.feed.tracks[id]).filter(Boolean).flatMap(t=>t.genres||[]))].sort();
   return `<div class="filters" id="filters">
-    <h4>Categoria label</h4><div class="chips" style="margin-bottom:12px;">${lc.map(l=>`<button class="chip ${state.filter.labels.has(l.key)?'on':''}" data-label="${esc(l.key)}">${esc(l.label)}</button>`).join('')||'<span style="color:var(--label3)">—</span>'}</div>
-    <h4>Solo usciti negli ultimi 30 giorni</h4><div class="chips" style="margin-bottom:12px;"><button class="chip ${state.filter.fresh?'on':''}" data-fresh="1">Brani freschi</button></div>
-    <h4>Valore (metrica attiva)</h4><div class="mmrow"><input id="minVal" type="number" inputmode="numeric" placeholder="min" value="${state.filter.min??""}"><input id="maxVal" type="number" inputmode="numeric" placeholder="max" value="${state.filter.max??""}"></div>
-    <h4>Generi</h4><div class="chips">${genres.map(g=>`<button class="chip ${state.filter.genres.has(g)?'on':''}" data-genre="${esc(g)}">${esc(g)}</button>`).join('')||'<span style="color:var(--label3)">—</span>'}</div>
-    <div class="foot"><button class="linkbtn" id="resetBtn">Reset</button><button class="linkbtn" id="closeFiltersBtn">Fine</button></div></div>`;
+    <h4>Label type</h4><div class="chips" style="margin-bottom:12px;">${lc.map(l=>`<button class="chip ${state.filter.labels.has(l.key)?'on':''}" data-label="${esc(l.key)}">${esc(tlabel(l.label))}</button>`).join('')||'<span style="color:var(--label3)">—</span>'}</div>
+    <h4>Released in the last 30 days</h4><div class="chips" style="margin-bottom:12px;"><button class="chip ${state.filter.fresh?'on':''}" data-fresh="1">Fresh tracks</button></div>
+    <h4>Value (active metric)</h4><div class="mmrow"><input id="minVal" type="number" inputmode="numeric" placeholder="min" value="${state.filter.min??""}"><input id="maxVal" type="number" inputmode="numeric" placeholder="max" value="${state.filter.max??""}"></div>
+    <h4>Genres</h4><div class="chips">${genres.map(g=>`<button class="chip ${state.filter.genres.has(g)?'on':''}" data-genre="${esc(g)}">${esc(g)}</button>`).join('')||'<span style="color:var(--label3)">—</span>'}</div>
+    <div class="foot"><button class="linkbtn" id="resetBtn">Reset</button><button class="linkbtn" id="closeFiltersBtn">Done</button></div></div>`;
 }
 function wireRadarControls(c){
   c.querySelectorAll('[data-plat]').forEach(el=>el.onclick=()=>{state.platform=el.dataset.plat;window.scrollTo(0,0);render();});
@@ -561,9 +564,9 @@ function resetFilters(){state.filter={q:"",genres:new Set(),labels:new Set(),fre
 function syncHeader(){const h=document.getElementById('headerRow'),sub=document.getElementById('sub');
   let title="Remix Radar",ctrls="";
   if(state.view==="radar"){title="Radar";ctrls=`<button class="roundbtn" id="refreshBtn">${ic("refresh")}</button><button class="roundbtn ${filterActive()?'on':''}" id="filterBtn">${ic("filter")}</button>`;}
-  else if(state.view==="artists")title="Artisti";
+  else if(state.view==="artists")title="Artists";
   else if(state.view==="sounds")title="Sounds";
-  else if(state.view==="library")title="Libreria";
+  else if(state.view==="library")title="Library";
   else if(state.view==="playlist"){const p=state.playlists.find(x=>x.id===state.currentPlaylist);title=p?p.name:"Playlist";}
   if(state.view==="playlist"){
     h.innerHTML=`<div class="hbar"><button class="roundbtn" id="backBtn">${ic("back")}</button><div class="htitle" style="flex:1;font-size:20px;text-align:center;">${esc(title)}</div><button class="roundbtn" id="renBtn">${ic("edit")}</button><button class="roundbtn" id="delBtn">${ic("trash")}</button></div>`;
@@ -573,11 +576,11 @@ function syncHeader(){const h=document.getElementById('headerRow'),sub=document.
   }
   h.innerHTML=`<div class="hbar"><div class="htitle">${esc(title)}${BETA?'<span class="betatag">BETA</span>':''}</div><div class="hbtns">${ctrls}</div></div>`;
   if(state.view==="radar"){const pm=platformMeta(state.platform),wm=windowMeta(state.window);
-    sub.style.display="flex";sub.innerHTML=state.feed?`<span class="dot"></span><span>${esc(pm?pm.label:"")}</span><span class="pipe">·</span><span>${esc(wm?wm.label:"")}</span><span class="pipe">·</span><span>agg. ${relTime(state.feed.generated_at)}</span>`:`<span>Sincronizzo…</span>`;
+    sub.style.display="flex";sub.innerHTML=state.feed?`<span class="dot"></span><span>${esc(pm?pm.label:"")}</span><span class="pipe">·</span><span>${esc(wm?wlabel(wm):"")}</span><span class="pipe">·</span><span>upd. ${relTime(state.feed.generated_at)}</span>`:`<span>Syncing…</span>`;
     document.getElementById('refreshBtn').onclick=()=>load(true);
     document.getElementById('filterBtn').onclick=()=>{const f=document.getElementById('filters');if(f){f.classList.toggle('open');document.getElementById('filterBtn').classList.toggle('on',f.classList.contains('open'));}};
-  }else if(state.view==="sounds"){const wm=sWindowMeta(state.soundWindow);sub.style.display="flex";sub.innerHTML=`<span class="dot"></span><span>TikTok</span><span class="pipe">·</span><span>${esc(wm?wm.label:"")}</span><span class="pipe">·</span><span>i suoni più usati</span>`;}
-  else if(state.view==="artists"){const pm=aPlatformMeta(state.artistPlatform),wm=aWindowMeta(state.artistWindow);sub.style.display="flex";sub.innerHTML=state.artistsFeed?`<span class="dot"></span><span>${esc(pm?pm.label:"")}</span><span class="pipe">·</span><span>${esc(wm?wm.label:"")}</span>`:`<span>Sincronizzo…</span>`;}
+  }else if(state.view==="sounds"){const wm=sWindowMeta(state.soundWindow);sub.style.display="flex";sub.innerHTML=`<span class="dot"></span><span>TikTok</span><span class="pipe">·</span><span>${esc(wm?wlabel(wm):"")}</span><span class="pipe">·</span><span>most used sounds</span>`;}
+  else if(state.view==="artists"){const pm=aPlatformMeta(state.artistPlatform),wm=aWindowMeta(state.artistWindow);sub.style.display="flex";sub.innerHTML=state.artistsFeed?`<span class="dot"></span><span>${esc(pm?pm.label:"")}</span><span class="pipe">·</span><span>${esc(wm?wlabel(wm):"")}</span>`:`<span>Syncing…</span>`;}
   else sub.style.display="none";
 }
 function syncTabs(){[["tabRadar","radar"],["tabArtists","artists"],["tabSounds","sounds"],["tabLib","library"]].forEach(([id,v])=>{document.getElementById(id).classList.toggle('on',state.view===v||(v==="library"&&state.view==="playlist"));});}
@@ -587,7 +590,7 @@ document.getElementById('tabRadar').onclick=()=>goView("radar");document.getElem
 /* detail */
 function openDetail(id){const t=trackById(id);if(!t)return;state.openId=id;const liked=isLiked(id);
   const cover=t.cover_url?`style="background-image:url('${esc(t.cover_url)}')"`:"";
-  const rows=[];if(t.release_date)rows.push(["Uscita",esc(t.release_date)]);if(t.label)rows.push(["Label",esc(t.label)+(t.label_category?" · "+esc(t.label_category):"")]);if((t.genres||[]).length)rows.push(["Generi",t.genres.map(esc).join(" · ")]);
+  const rows=[];if(t.release_date)rows.push(["Release",esc(t.release_date)]);if(t.label)rows.push(["Label",esc(t.label)+(t.label_category?" · "+esc(tlabel(t.label_category)):"")]);if((t.genres||[]).length)rows.push(["Genres",t.genres.map(esc).join(" · ")]);
   const yt="https://www.youtube.com/results?search_query="+encodeURIComponent(t.name+" "+t.artist);
   const plChips=state.playlists.map(p=>`<button class="chip ${inPlaylist(p,id)?'on':''}" data-tpl="${p.id}">${esc(p.name)}</button>`).join('');
   const playing=state.playingId===id;
@@ -601,21 +604,21 @@ function openDetail(id){const t=trackById(id);if(!t)return;state.openId=id;const
     ${player}
     <div class="grid">
       <div class="tile"><div class="k">Spotify streams</div><div class="v">${fmt(t.spotify_total)} <small>+${(t.spotify_24h_pct||0).toFixed(0)}%</small></div></div>
-      <div class="tile"><div class="k">TikTok video</div><div class="v">${fmt(t.tiktok_total)} <small>+${(t.tiktok_24h_pct||0).toFixed(0)}%</small></div></div>
+      <div class="tile"><div class="k">TikTok videos</div><div class="v">${fmt(t.tiktok_total)} <small>+${(t.tiktok_24h_pct||0).toFixed(0)}%</small></div></div>
       <div class="tile"><div class="k">YouTube views</div><div class="v">${fmt(t.youtube_total)}</div></div>
       <div class="tile"><div class="k">Shazam</div><div class="v">${fmt(t.shazam_total)}</div></div>
     </div>
     ${rows.length?`<div class="drows">${rows.map(r=>`<div class="drow"><span class="k">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div>`:""}
-    <div class="plpick"><h4>Aggiungi a playlist</h4><div class="chips">${plChips}<button class="chip" id="newPlChip">${ic("plus")} Nuova</button></div></div>
+    <div class="plpick"><h4>Add to playlist</h4><div class="chips">${plChips}<button class="chip" id="newPlChip">${ic("plus")} New</button></div></div>
     <div class="dactions">
-      <button class="btn like ${liked?'on':''}" id="dLike">${ic(liked?"heart-fill":"heart")} ${liked?"Salvato nei preferiti":"Salva nei preferiti"}</button>
-      ${t.spotify_url?`<a class="btn fill" href="${esc(t.spotify_url)}" target="_blank" rel="noopener">${ic("ext")} Apri su Spotify</a>`:""}
-      <a class="btn tinted" href="${yt}" target="_blank" rel="noopener">${ic("ext")} Cerca su YouTube</a>
+      <button class="btn like ${liked?'on':''}" id="dLike">${ic(liked?"heart-fill":"heart")} ${liked?"Saved to favorites":"Save to favorites"}</button>
+      ${t.spotify_url?`<a class="btn fill" href="${esc(t.spotify_url)}" target="_blank" rel="noopener">${ic("ext")} Open in Spotify</a>`:""}
+      <a class="btn tinted" href="${yt}" target="_blank" rel="noopener">${ic("ext")} Search on YouTube</a>
     </div>`;
   document.getElementById('closeX').onclick=closeSheet;
   document.getElementById('dLike').onclick=()=>toggleLike(t);
   document.querySelectorAll('[data-tpl]').forEach(el=>el.onclick=()=>{togglePlaylistTrack(el.dataset.tpl,t);openDetail(id);render();});
-  document.getElementById('newPlChip').onclick=()=>{const n=prompt("Nome della nuova playlist:","Da remixare");if(n&&n.trim()){createPlaylist(n.trim(),t);openDetail(id);render();}};
+  document.getElementById('newPlChip').onclick=()=>{const n=prompt("New playlist name:","To remix");if(n&&n.trim()){createPlaylist(n.trim(),t);openDetail(id);render();}};
   const pBtn=document.getElementById('pBtn');if(pBtn)pBtn.onclick=()=>togglePlay(id);
   const pv=document.getElementById('prevBtn');if(pv)pv.onclick=()=>playStep(-1);
   const nx=document.getElementById('nextBtn');if(nx)nx.onclick=()=>playStep(1);
@@ -655,7 +658,7 @@ document.getElementById('mpPrev').onclick=()=>playStep(-1);
 document.getElementById('mpNext').onclick=()=>playStep(1);
 
 /* load */
-function relTime(iso){const d=new Date(iso),diff=(Date.now()-d.getTime())/1000;if(diff<3600)return Math.max(1,Math.round(diff/60))+" min fa";if(diff<86400)return Math.round(diff/3600)+"h fa";return Math.round(diff/86400)+"g fa";}
+function relTime(iso){const d=new Date(iso),diff=(Date.now()-d.getTime())/1000;if(diff<3600)return Math.max(1,Math.round(diff/60))+" min ago";if(diff<86400)return Math.round(diff/3600)+"h ago";return Math.round(diff/86400)+"d ago";}
 function afterLoad(){if(!state.platform)state.platform="spotify";if(!state.window)state.window=isPremium()?(windowsMeta()[0]?.key||"24h"):freeWindow();render();}
 async function load(force){
   try{const res=await fetch("./feed.json?t="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
