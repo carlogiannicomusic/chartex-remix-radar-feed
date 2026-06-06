@@ -683,6 +683,7 @@
     <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5s-7.5-4.5-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3.5c0 5.5-7.5 10-7.5 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
     <symbol id="i-heart-fill" viewBox="0 0 24 24"><path d="M12 20.5s-7.5-4.5-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3.5c0 5.5-7.5 10-7.5 10z" fill="currentColor"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7V5z" fill="currentColor"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><g fill="currentColor"><rect x="3" y="10" width="2.6" height="4"/><rect x="7.5" y="7" width="2.6" height="10"/><rect x="12" y="3.5" width="2.6" height="17"/><rect x="16.5" y="8" width="2.6" height="8"/></g></symbol>
     <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="0" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="0" fill="currentColor"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -746,6 +747,7 @@
 <nav class="tabbar">
   <button class="tab" id="tabRadar"><svg><use href="#i-radar"/></svg>Radar</button>
   <button class="tab" id="tabArtists"><svg><use href="#i-artists"/></svg>Artisti</button>
+  <button class="tab" id="tabSounds"><svg><use href="#i-sound"/></svg>Sounds</button>
   <button class="tab" id="tabLib"><svg><use href="#i-library"/></svg>Libreria</button>
 </nav>
 
@@ -759,6 +761,7 @@ const state={feed:null,view:"radar",platform:null,window:null,currentPlaylist:nu
   filter:{q:"",genres:new Set(),labels:new Set(),fresh:false,min:null,max:null},
   playingId:null,openId:null,
   artistsFeed:null,artistPlatform:null,artistWindow:null,artistQ:"",
+  soundsFeed:null,soundWindow:null,soundQ:"",
   likes:loadJSON(LS.likes,{}),playlists:loadJSON(LS.playlists,[])};
 const audio=document.getElementById('audio');
 
@@ -795,6 +798,7 @@ function isLocked(k){const w=windowMeta(k);return w&&w.tier==="premium"&&!isPrem
 function chartIds(){return (state.feed?.charts?.[state.platform]?.[state.window])||[];}
 function trackById(id){
   if(state.feed?.tracks&&state.feed.tracks[id])return state.feed.tracks[id];
+  if(state.soundsFeed?.sounds&&state.soundsFeed.sounds[id])return state.soundsFeed.sounds[id];
   if(state.likes[id])return state.likes[id];
   for(const p of state.playlists){const t=p.tracks.find(x=>x.id===id);if(t)return t;}
   return null;
@@ -906,6 +910,7 @@ function render(){
   const c=document.getElementById('content');
   if(state.view==="radar")return renderRadar(c);
   if(state.view==="artists")return renderArtists(c);
+  if(state.view==="sounds")return renderSounds(c);
   if(state.view==="library")return renderLibrary(c);
   if(state.view==="playlist")return renderPlaylist(c);
 }
@@ -985,6 +990,12 @@ function renderPlat(){const w=document.getElementById('platWrap');
   w.querySelectorAll('[data-plat]').forEach(el=>el.onclick=()=>{state.platform=el.dataset.plat;window.scrollTo(0,0);buildFilterChips();render();});
 }
 function renderSeg(){const w=document.getElementById('segWrap');
+  if(state.view==="sounds"){
+    if(!state.soundsFeed){w.innerHTML="";return;}
+    w.innerHTML='<div class="seg">'+sWindows().map(m=>`<button class="${m.key===state.soundWindow?'on':''}" data-swin="${m.key}">${esc(m.label).toUpperCase()}${sLocked(m.key)?' <span class="lock">⊠</span>':''}</button>`).join('')+'</div>';
+    w.querySelectorAll('[data-swin]').forEach(el=>el.onclick=()=>{state.soundWindow=el.dataset.swin;window.scrollTo(0,0);render();});
+    return;
+  }
   if(!(state.view==="radar"||state.view==="artists")||!state.feed){w.innerHTML="";return;}
   if(state.view==="artists"){
     if(!state.artistsFeed){w.innerHTML="";return;}
@@ -997,8 +1008,12 @@ function renderSeg(){const w=document.getElementById('segWrap');
 }
 function renderSearch(){
   const w=document.getElementById('searchWrap');
-  w.style.display=(state.view==="radar"||state.view==="artists")&&state.feed?"flex":"none";
-  if(state.view==="artists"){
+  w.style.display=(state.view==="radar"||state.view==="artists"||state.view==="sounds")&&(state.feed||state.soundsFeed)?"flex":"none";
+  if(state.view==="sounds"){
+    const inp=document.getElementById('searchInput');
+    inp.placeholder="Cerca sound, brano o artista…";
+    inp.value=state.soundQ;
+  } else if(state.view==="artists"){
     const inp=document.getElementById('searchInput');
     inp.placeholder="Cerca artista…";
     inp.value=state.artistQ;
@@ -1074,7 +1089,7 @@ document.getElementById('sheet').addEventListener('click',e=>{if(e.target.id==='
   function end(e){if(mode==='drag'){const dy=(e.changedTouches?e.changedTouches[0].clientY:sy)-sy;inner.style.transition='transform .25s ease';sheet.style.background='';if(dy>110)closeSheet();else inner.style.transform='';}mode=null;}
   inner.addEventListener('touchend',end);inner.addEventListener('touchcancel',end);})();
 
-function togglePlay(id){const t=trackById(id);if(!t||!t.preview_url)return;if(state.playingId===id){audio.pause();state.playingId=null;rerender();return;}audio.src=t.preview_url;audio.play().catch(()=>{});state.playingId=id;rerender();}
+function togglePlay(id){const t=trackById(id);const url=t&&(t.preview_url||t.play_url);if(!url)return;if(state.playingId===id){audio.pause();state.playingId=null;rerender();return;}audio.src=url;audio.play().catch(()=>{});state.playingId=id;rerender();}
 audio.addEventListener('ended',()=>{state.playingId=null;rerender();});
 audio.addEventListener('timeupdate',()=>{updateScrubber();updateMiniplayerScrubber();});
 audio.addEventListener('loadedmetadata',()=>{updateScrubber();updateMiniplayerScrubber();});
@@ -1114,6 +1129,12 @@ function syncHeader(){const h=document.getElementById('headerRow'),sub=document.
     const pm=aPlatformMeta(state.artistPlatform),wm=aWindowMeta(state.artistWindow);
     sub.innerHTML=state.artistsFeed?`<span class="live"><span class="dot"></span>ON AIR</span><span>${esc(pm?pm.label.toUpperCase():"")}</span><span>/</span><span>${esc(wm?wm.label.toUpperCase():"")}</span>`:`<span>SINTONIZZO…</span>`;
     fEl.classList.remove('open');
+  } else if(state.view==="sounds"){
+    h.innerHTML=`<div class="wordmark"><span class="a">SOUNDS</span><span class="b">TIKTOK<span class="dot"></span></span></div>`;
+    sub.style.display="flex";
+    const wm=sWindowMeta(state.soundWindow);
+    sub.innerHTML=state.soundsFeed?`<span class="live"><span class="dot"></span>ON AIR</span><span>TIKTOK</span><span>/</span><span>${esc(wm?wm.label.toUpperCase():"")}</span><span>/</span><span>SOUNDS PIÙ USATI</span>`:`<span>SINTONIZZO…</span>`;
+    fEl.classList.remove('open');
   } else if(state.view==="library"){
     h.innerHTML=`<div class="wordmark"><span class="a">LIBRERIA</span><span class="b">PERSONALE<span class="dot"></span></span></div>`;
     sub.style.display="none";fEl.classList.remove('open');
@@ -1125,9 +1146,9 @@ function syncHeader(){const h=document.getElementById('headerRow'),sub=document.
     document.getElementById('backBtn').onclick=()=>goView("library");document.getElementById('renBtn').onclick=()=>renamePlaylist(state.currentPlaylist);document.getElementById('delBtn').onclick=()=>deletePlaylist(state.currentPlaylist);
   }
 }
-function syncTabs(){document.getElementById('tabRadar').classList.toggle('on',state.view==="radar");document.getElementById('tabArtists').classList.toggle('on',state.view==="artists");document.getElementById('tabLib').classList.toggle('on',state.view==="library"||state.view==="playlist");}
-function goView(v){state.view=v;closeSheet();window.scrollTo(0,0);if(v==="artists"&&!state.artistsFeed)loadArtists();render();}
-document.getElementById('tabRadar').onclick=()=>goView("radar");document.getElementById('tabArtists').onclick=()=>goView("artists");document.getElementById('tabLib').onclick=()=>goView("library");
+function syncTabs(){document.getElementById('tabRadar').classList.toggle('on',state.view==="radar");document.getElementById('tabArtists').classList.toggle('on',state.view==="artists");document.getElementById('tabSounds').classList.toggle('on',state.view==="sounds");document.getElementById('tabLib').classList.toggle('on',state.view==="library"||state.view==="playlist");}
+function goView(v){state.view=v;closeSheet();window.scrollTo(0,0);if(v==="artists"&&!state.artistsFeed)loadArtists();if(v==="sounds"&&!state.soundsFeed)loadSounds();render();}
+document.getElementById('tabRadar').onclick=()=>goView("radar");document.getElementById('tabArtists').onclick=()=>goView("artists");document.getElementById('tabSounds').onclick=()=>goView("sounds");document.getElementById('tabLib').onclick=()=>goView("library");
 
 /* ---- Artists tab ---- */
 function aPlatforms(){return state.artistsFeed?.platforms||[];}
@@ -1194,6 +1215,59 @@ function artistCardHTML(a,rank,index){
   </div>`;
 }
 
+/* ---- Sounds tab (TikTok) ---- */
+function sWindows(){return state.soundsFeed?.windows||[];}
+function sWindowMeta(k){return sWindows().find(w=>w.key===k);}
+function sLocked(k){const w=sWindowMeta(k);return w&&w.tier==="premium"&&!isPremium();}
+function sField(w){return w==="24h"?"video_24h":w==="7d"?"video_7d":"video_total";}
+function sHeadline(s){const w=state.soundWindow;return fmt(s[sField(w)]||0)+'<span class="u">VIDEO'+(w==="7d"?' 7G':w==="24h"?' 24H':'')+'</span>';}
+async function loadSounds(){
+  try{const r=await fetch("./sounds.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;state.soundsFeed=await r.json();
+    Object.values(state.soundsFeed.sounds||{}).forEach(s=>{if(!s.cover_url)s.cover_url=s.image_url;});
+    if(!state.soundWindow)state.soundWindow=isPremium()?(sWindows()[0]?.key||"24h"):(state.soundsFeed.free_window||"month");
+    if(state.view==="sounds")render();
+  }catch(e){if(state.view==="sounds")document.getElementById('content').innerHTML='<div class="status"><div class="big">Errore</div>Impossibile caricare i sounds.</div>';}
+}
+function renderSounds(c){
+  if(!state.soundsFeed){c.innerHTML='<div class="status"><div class="big">Sintonizzo<em>…</em></div>Carico i sounds.</div>';return;}
+  if(sLocked(state.soundWindow)){
+    const wm=sWindowMeta(state.soundWindow);
+    c.innerHTML=`<div class="lockbox"><div class="lockbox-head"><span>CAT. PREMIUM / ${esc(wm?wm.label:"").toUpperCase()}</span><span>SOUNDS</span></div>
+      <div class="lockbox-body"><div class="ic">${ic("lock")}</div><h3>${esc(wm?wm.label:"")} — Premium</h3>
+      <p>I sound trending <b>24h</b> e <b>7 giorni</b> sono Premium: cogli il suono <b>prima</b> che esploda.</p>
+      <button class="demo" id="sDemo">Sblocca in modalità demo</button></div></div>`;
+    document.getElementById('sDemo').onclick=()=>{setPremium(true);render();};return;
+  }
+  const ids=(state.soundsFeed.charts?.[state.soundWindow])||[];
+  let rows=ids.map(id=>state.soundsFeed.sounds[id]).filter(Boolean);
+  if(state.soundQ){const q=state.soundQ.toLowerCase();rows=rows.filter(s=>(s.name||"").toLowerCase().includes(q)||(s.song_name||"").toLowerCase().includes(q)||(s.artist||"").toLowerCase().includes(q));}
+  if(!rows.length){c.innerHTML=`<div class="status"><div class="big">Nessun<em> match</em></div>Nessun sound trovato.</div>`;return;}
+  c.innerHTML='<div class="list">'+rows.map((s,i)=>soundCardHTML(s,ids.indexOf(s.id)+1,i)).join('')+'</div>';
+  c.querySelectorAll('[data-sound]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-play]'))return;const s=state.soundsFeed.sounds[el.dataset.sound];if(s&&s.official_link)window.open(s.official_link,"_blank");}));
+  c.querySelectorAll('[data-play]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();togglePlay(el.dataset.play);}));
+}
+function soundCardHTML(s,rank,index){
+  const cover=s.image_url?`style="background-image:url('${esc(s.image_url)}')"`:"";
+  const playing=state.playingId===s.id;
+  const play=s.play_url?`<div class="play" data-play="${esc(s.id)}">${ic(playing?"pause":"play")}</div>`:"";
+  const tier=!rank?"":(rank<=3?"tier-1":(rank<=10?"tier-2":"tier-3"));
+  const rankNum=rank?pad2(rank):"—";
+  const coord=coordOf({id:s.id,name:s.name});
+  const meta=[];if((s.views||0)>0)meta.push(`VIEWS <b>${fmt(s.views)}</b>`);if((s.likes||0)>0)meta.push(`LIKE <b>${fmt(s.likes)}</b>`);if((s.video_24h||0)>0)meta.push(`24H <b>${fmt(s.video_24h)}</b>`);
+  const metaHTML=meta.slice(0,3).map((b,i)=>i>0?`<span class="sep">/</span><span>${b}</span>`:`<span>${b}</span>`).join('');
+  const sub=s.song_name?esc(s.song_name)+(s.artist?" — "+esc(s.artist):""):esc(s.creator||"");
+  return `<div class="card sound ${tier} ${playing?'playing':''}" data-sound="${esc(s.id)}" style="--i:${index||0}">
+    <div class="rankblock"><div class="cat">T${pad3(rank)}</div><div class="rank">${rankNum}</div><div class="cover" ${cover}>${play}</div></div>
+    <div class="cbody">
+      <div class="ctop"><span class="coord"><span class="or">●</span> RR.T04.S${pad3(rank)} <span class="sep">/</span> <span class="bl">${esc(coord)}</span></span></div>
+      <div class="name">${esc(s.name||s.song_name||"Sound")}</div>
+      <div class="artist-name">${sub}</div>
+      <div class="pillrow"><span class="metricpill">${sHeadline(s)}</span><span class="hexlabel">TIKTOK</span></div>
+      <div class="meta">${metaHTML}</div>
+    </div>
+  </div>`;
+}
+
 function filterActive(){const f=state.filter;return f.q||f.genres.size||f.labels.size||f.fresh||f.min!=null||f.max!=null;}
 function buildFilterChips(){
   const lc=state.feed?.label_categories||[];
@@ -1211,7 +1285,8 @@ function resetFilters(){state.filter={q:"",genres:new Set(),labels:new Set(),fre
   document.querySelectorAll('.filters .chip.on').forEach(c=>c.classList.remove('on'));syncHeader();render();}
 document.getElementById('searchInput').addEventListener('input',e=>{
   const v=e.target.value.trim();
-  if(state.view==="artists"){state.artistQ=v;renderArtists(document.getElementById('content'));}
+  if(state.view==="sounds"){state.soundQ=v;renderSounds(document.getElementById('content'));}
+  else if(state.view==="artists"){state.artistQ=v;renderArtists(document.getElementById('content'));}
   else{state.filter.q=v;syncHeader();renderRadar(document.getElementById('content'));}
 });
 document.getElementById('minVal').addEventListener('input',e=>{state.filter.min=e.target.value===""?null:+e.target.value;syncHeader();renderRadar(document.getElementById('content'));});
