@@ -35,7 +35,21 @@
     border-bottom:.5px solid var(--sep);padding-top:var(--safe-top);}
   .hbar,.sub,.controls{max-width:680px;margin-left:auto;margin-right:auto;}
   .hbar{display:flex;align-items:flex-end;justify-content:space-between;padding:6px 16px 8px;gap:10px;}
-  .htitle{font-size:30px;font-weight:800;letter-spacing:-.02em;}
+  .htitle{font-size:30px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;}
+  .betatag{font-size:10px;font-weight:800;letter-spacing:.08em;color:#fff;background:var(--accent);
+    padding:3px 7px;border-radius:6px;transform:translateY(-6px);}
+  .welcome{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;padding:24px;}
+  .welcome.open{display:flex;}
+  .welcard{background:#1C1C1E;border-radius:22px;max-width:360px;width:100%;padding:26px 22px;text-align:center;}
+  .welcard .ico{width:78px;height:78px;border-radius:18px;margin:0 auto 14px;background:#000 center/cover no-repeat;border:.5px solid var(--sep);}
+  .welcard h2{font-size:24px;font-weight:800;margin:0;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .welcard .tag{font-size:11px;font-weight:800;color:#fff;background:var(--accent);padding:3px 8px;border-radius:6px;}
+  .welcard p{color:var(--label2);font-size:15px;margin:10px 0 16px;}
+  .welcard ul{list-style:none;padding:0;margin:0 0 18px;text-align:left;}
+  .welcard li{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:14px;color:var(--label);}
+  .welcard li svg{width:18px;height:18px;color:var(--accent);flex:none;margin-top:2px;}
+  .welcard .hint{font-size:12.5px;color:var(--label3);margin:14px 0 0;}
   .hbtns{display:flex;gap:6px;}
   .roundbtn{width:34px;height:34px;border-radius:50%;border:none;background:var(--fill);color:var(--label);
     display:flex;align-items:center;justify-content:center;cursor:pointer;}
@@ -243,11 +257,25 @@
   <button class="tab" id="tabLib"><svg class="icon"><use href="#i-library"/></svg><span>Libreria</span></button>
 </nav>
 
+<div class="welcome" id="welcome"><div class="welcard">
+  <div class="ico" style="background-image:url('./pwa-icon-192.png')"></div>
+  <h2>Remix Radar <span class="tag">BETA</span></h2>
+  <p>I brani e i suoni che stanno esplodendo oggi su TikTok, Spotify, YouTube e Shazam — pronti da remixare.</p>
+  <ul>
+    <li><svg class="icon"><use href="#i-radar"/></svg>Scopri i trending per piattaforma e finestra (24h, 7 giorni, mese).</li>
+    <li><svg class="icon"><use href="#i-play"/></svg>Ascolta l'anteprima e salva i preferiti in playlist.</li>
+    <li><svg class="icon"><use href="#i-search"/></svg>Cerca e filtra per genere, label e artista.</li>
+  </ul>
+  <button class="btn fill" id="welStart">Inizia</button>
+  <p class="hint">Consiglio: in Safari tocca Condividi e poi "Aggiungi alla schermata Home" per usarla come app.</p>
+</div></div>
+
 <div class="sheet" id="sheet"><div class="sheetinner" id="sheetinner"></div></div>
 <audio id="audio"></audio>
 
 <script>
-const LS={likes:"rr_likes_v1",playlists:"rr_playlists_v1",feed:"rr_feed_v3",premium:"rr_premium"};
+const BETA=true; // beta build: all premium windows unlocked for testers
+const LS={likes:"rr_likes_v1",playlists:"rr_playlists_v1",feed:"rr_feed_v3",premium:"rr_premium",seen:"rr_seen_welcome"};
 const state={feed:null,view:"radar",platform:"spotify",window:"",currentPlaylist:null,
   filter:{q:"",genres:new Set(),labels:new Set(),fresh:false,min:null,max:null},
   playingId:null,openId:null,
@@ -259,7 +287,7 @@ const audio=document.getElementById('audio');
 function loadJSON(k,d){try{return JSON.parse(localStorage.getItem(k))??d;}catch(e){return d;}}
 function saveLikes(){localStorage.setItem(LS.likes,JSON.stringify(state.likes));}
 function savePlaylists(){localStorage.setItem(LS.playlists,JSON.stringify(state.playlists));}
-function isPremium(){return localStorage.getItem(LS.premium)==="1";}
+function isPremium(){return BETA||localStorage.getItem(LS.premium)==="1";}
 function setPremium(v){v?localStorage.setItem(LS.premium,"1"):localStorage.removeItem(LS.premium);}
 const fmt=n=>{if(n==null||n<=0)return "—";if(n>=1e9)return (n/1e9).toFixed(1)+"B";if(n>=1e6)return (n/1e6).toFixed(1)+"M";if(n>=1e3)return (n/1e3).toFixed(1)+"K";return ""+Math.round(n);};
 const esc=s=>(s==null?"":(""+s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -533,7 +561,7 @@ function syncHeader(){const h=document.getElementById('headerRow'),sub=document.
     document.getElementById('backBtn').onclick=()=>goView("library");document.getElementById('renBtn').onclick=()=>renamePlaylist(state.currentPlaylist);document.getElementById('delBtn').onclick=()=>deletePlaylist(state.currentPlaylist);
     return;
   }
-  h.innerHTML=`<div class="hbar"><div class="htitle">${esc(title)}</div><div class="hbtns">${ctrls}</div></div>`;
+  h.innerHTML=`<div class="hbar"><div class="htitle">${esc(title)}${BETA?'<span class="betatag">BETA</span>':''}</div><div class="hbtns">${ctrls}</div></div>`;
   if(state.view==="radar"){const pm=platformMeta(state.platform),wm=windowMeta(state.window);
     sub.style.display="flex";sub.innerHTML=state.feed?`<span class="dot"></span><span>${esc(pm?pm.label:"")}</span><span class="pipe">·</span><span>${esc(wm?wm.label:"")}</span><span class="pipe">·</span><span>agg. ${relTime(state.feed.generated_at)}</span>`:`<span>Sincronizzo…</span>`;
     document.getElementById('refreshBtn').onclick=()=>load(true);
@@ -631,6 +659,12 @@ if("serviceWorker" in navigator){
   let reloaded=false;
   navigator.serviceWorker.addEventListener("controllerchange",()=>{if(reloaded)return;reloaded=true;location.reload();});
 }
+/* first-run welcome (beta onboarding for new testers) */
+(function(){
+  const w=document.getElementById('welcome');
+  if(!localStorage.getItem(LS.seen)){w.classList.add('open');}
+  document.getElementById('welStart').onclick=()=>{try{localStorage.setItem(LS.seen,"1");}catch(e){}w.classList.remove('open');};
+})();
 render();load(false);
 </script>
 </body>
