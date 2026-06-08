@@ -4,10 +4,11 @@
 //                          fall back to cached shell only when offline)
 //  - feed / data JSON   -> NETWORK-FIRST  (fresh data, cached fallback)
 //  - static assets      -> CACHE-FIRST    (icons/manifest, versioned by SHELL)
-const SHELL = "rr-shell-v18";
+const SHELL = "rr-shell-v19";
 const SHELL_FILES = [
   "./",
   "./index.html",
+  "./app.html",
   "./manifest.webmanifest",
   "./pwa-icon-192.png",
   "./pwa-icon-512.png",
@@ -36,13 +37,19 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
 
   // HTML / navigation: network-first so the latest UI always wins when online.
+  // Cache each page under its own path; offline falls back to the app, then the landing.
   if (isNavigation(req)) {
     e.respondWith(
       fetch(req).then((res) => {
         const copy = res.clone();
-        caches.open(SHELL).then((c) => { c.put("./index.html", copy); c.put("./", copy.clone()); });
+        caches.open(SHELL).then((c) => c.put(req, copy));
         return res;
-      }).catch(() => caches.match("./index.html").then((hit) => hit || caches.match("./")))
+      }).catch(async () =>
+        (await caches.match(req)) ||
+        (await caches.match("./app.html")) ||
+        (await caches.match("./index.html")) ||
+        (await caches.match("./"))
+      )
     );
     return;
   }

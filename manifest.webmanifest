@@ -2,7 +2,7 @@
   "name": "Remix Radar",
   "short_name": "Remix Radar",
   "description": "The day's fastest-rising songs and sounds to remix — across TikTok, Spotify, YouTube and Shazam.",
-  "start_url": "./index.html",
+  "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
