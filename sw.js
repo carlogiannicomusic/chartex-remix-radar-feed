@@ -4,7 +4,7 @@
 //                          fall back to cached shell only when offline)
 //  - feed / data JSON   -> NETWORK-FIRST  (fresh data, cached fallback)
 //  - static assets      -> CACHE-FIRST    (icons/manifest, versioned by SHELL)
-const SHELL = "rr-shell-v19";
+const SHELL = "rr-shell-v20";
 const SHELL_FILES = [
   "./",
   "./index.html",
@@ -12,7 +12,22 @@ const SHELL_FILES = [
   "./manifest.webmanifest",
   "./pwa-icon-192.png",
   "./pwa-icon-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  // Official Digital Renaissance brand assets (fonts, logos, imagery)
+  "./brand/fonts.css",
+  "./brand/fonts/Megazoid-Fill.woff2",
+  "./brand/fonts/Megazoid-Regular.woff2",
+  "./brand/fonts/ProximaNova-Regular.woff2",
+  "./brand/fonts/ProximaNova-Medium.woff2",
+  "./brand/fonts/ProximaNova-SemiBold.woff2",
+  "./brand/fonts/ProximaNova-Bold.woff2",
+  "./brand/fonts/ProximaNova-ExtraBold.woff2",
+  "./brand/fonts/ProximaNova-Black.woff2",
+  "./brand/dr-mark-black.svg",
+  "./brand/dr-music-institute-white.svg",
+  "./brand/photo-archival.webp",
+  "./brand/favicon.svg",
+  "./brand/webclip.png"
 ];
 
 self.addEventListener("install", (e) => {

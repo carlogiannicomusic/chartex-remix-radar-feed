@@ -1,0 +1,10 @@
+/* Digital Renaissance — official web fonts (Megazoid + Proxima Nova) */
+@font-face{font-family:'Megazoid Fill';src:url('fonts/Megazoid-Fill.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Megazoid';src:url('fonts/Megazoid-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Proxima Nova';src:url('fonts/ProximaNova-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Proxima Nova';src:url('fonts/ProximaNova-RegularItalic.woff2') format('woff2');font-weight:400;font-style:italic;font-display:swap;}
+@font-face{font-family:'Proxima Nova';src:url('fonts/ProximaNova-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap;}
+@font-face{font-family:'Proxima Nova';src:url('fonts/ProximaNova-SemiBold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap;}
+@font-face{font-family:'Proxima Nova';src:url('fonts/ProximaNova-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap;}
+@font-face{font-family:'Proxima Nova';src:url('fonts/ProximaNova-ExtraBold.woff2') format('woff2');font-weight:800;font-style:normal;font-display:swap;}
+@font-face{font-family:'Proxima Nova';src:url('fonts/ProximaNova-Black.woff2') format('woff2');font-weight:900;font-style:normal;font-display:swap;}
