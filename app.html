@@ -666,7 +666,7 @@ async function load(force){
   try{const res=await fetch("./feed.json?t="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
     state.feed=await res.json();try{localStorage.setItem(LS.feed,JSON.stringify(state.feed));}catch(e){}afterLoad();
   }catch(err){const cached=loadJSON(LS.feed,null);if(cached){state.feed=cached;afterLoad();}
-    else if(state.view==="radar"){document.getElementById('content').innerHTML='<div class="status"><div class="big">Segnale perso</div>Impossibile caricare il feed.<br><br><button class="btn tinted" id="rt" style="max-width:200px;margin:0 auto;">Riprova</button></div>';document.getElementById('rt').onclick=()=>load(true);}}}
+    else if(state.view==="radar"){document.getElementById('content').innerHTML='<div class="status"><div class="big">Signal lost</div>Unable to load the feed.<br><br><button class="btn tinted" id="rt" style="max-width:200px;margin:0 auto;">Retry</button></div>';document.getElementById('rt').onclick=()=>load(true);}}}
 
 /* service worker + auto-update */
 if("serviceWorker" in navigator){
